@@ -1,0 +1,9 @@
+void write5
+	repeat(int i = 0|i < 5|i++)
+		print i
+	loop
+ret //End write5
+
+int main
+	write5
+ret 0
