@@ -16,12 +16,12 @@ struct Token {
 class Keywords {
 private:
 	static std::unordered_set<std::string> operators, delineators, commands, types;
-public:
-	template<class T>
-	inline static bool isContained(std::unordered_set<T> set, T element) {
-		return set.find(element) != set.end();
-	}
 
+	template<class T>
+	inline static bool isContained (std::unordered_set<T> set, T element) {
+		return set.find (element) != set.end ( );
+	}
+public:
 	inline static bool isDelineator(const std::string& item) { return isContained(delineators, item); }
 	inline static bool isOperator(const std::string& item) { return isContained(operators, item); }
 

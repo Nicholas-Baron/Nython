@@ -23,8 +23,8 @@ std::vector<std::string> fileContents(const std::string& location) {
 	return toRet;
 }
 
-std::vector<Token> tokens(std::vector<std::string> program) {
-	std::vector<Token> toRet;
+std::vector<Token*> tokens(std::vector<std::string> program) {
+	std::vector<Token*> toRet;
 	
 	for(unsigned line = 0; line < program.size(); line++) {
 		bool isComment = false;
@@ -54,8 +54,8 @@ std::vector<Token> tokens(std::vector<std::string> program) {
 
 				if(!isComment) {
 					TokenType tt = Keywords::getTokenType(current);
-
-					toRet.push_back(Token{tt, current, line});
+					Token* tok = new Token { tt, current, line };
+					toRet.push_back(tok);
 				}
 			}
 		}

@@ -17,7 +17,7 @@ inline bool isValidFile(const std::string& location) {
 	return !error;
 }
 
-std::vector<Token> tokens(std::vector<std::string> program);
+std::vector<Token*> tokens(std::vector<std::string> program);
 
 inline std::string trim(const std::string& str_in, const std::string& whitespace = " \t") {
 	const auto strBegin = str_in.find_first_not_of(whitespace);

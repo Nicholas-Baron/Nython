@@ -1,13 +1,12 @@
 #include "Loader.h"
+#include "Parser.h"
 
 #include <iostream>
 #include <string>
 
-
-int main(int argCount, char* args[]) {
-
+std::string getFileLocation (int argCount, char* args[] ) {
 	std::string fileLoc;
-	if(argCount >= 2) {
+	if (argCount >= 2) {
 		fileLoc = args[1];
 	} else {
 		std::cout << "Enter a file to load: ";
@@ -15,21 +14,29 @@ int main(int argCount, char* args[]) {
 	}
 
 	//Ensure valid location
-	while(!isValidFile(fileLoc)) {
+	while (!isValidFile (fileLoc)) {
 		std::cout << "Invalid file " << fileLoc << std::endl;
 		std::cout << "Enter a different file location: ";
 		std::cin >> fileLoc;
 	}
 
+	return fileLoc;
+}
+
+int main(int argCount, char* args[]) {
+
+	auto fileLoc = getFileLocation (argCount, args);
 	auto content = fileContents(fileLoc);
 	auto tokenList = tokens(content);
+	Parser parse;
+	parse.parseTokens (tokenList);
 
 	for(unsigned i = 0; i < tokenList.size(); i++) {
-		std::cout << "[" << tokenList[i].line_number << "] " << " " << tokenList[i].token << std::endl;
+		std::cout << "[" << tokenList[i]->line_number << "] " << " " << tokenList[i]->token << std::endl;
 	}
 
-#if _WIN32
 	//Windows pausing
+#if _WIN32
 	system("pause");
 #endif // _WIN32
 
