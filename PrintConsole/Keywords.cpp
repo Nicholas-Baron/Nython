@@ -5,6 +5,11 @@ std::unordered_set<std::string>	Keywords::delineators = {"(",")","|"};
 std::unordered_set<std::string>	Keywords::commands = {"print","repeat","loop","ret","return"};
 std::unordered_set<std::string>	Keywords::types = {"int","void"};
 
+bool Keywords::isBinaryOp(const Token & tok) {
+	auto txt = tok.token;
+	return (txt == "=") || (txt == "<") || (txt == "->");
+}
+
 TokenType Keywords::getTokenType(const std::string & text) {
 
 	const auto first_space = text.find_first_of(" ");
@@ -27,4 +32,13 @@ TokenType Keywords::getTokenType(const std::string & text) {
 	}
 
 	return type;
+}
+
+std::ostream & operator<<(std::ostream & lhs, const Token& rhs) {
+	lhs << rhs.token;
+	return lhs;
+}
+
+bool operator==(const Token & lhs, const Token & rhs) {
+	return lhs.line_number == rhs.line_number && lhs.type == rhs.type&&lhs.token == rhs.token;
 }

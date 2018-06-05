@@ -30,10 +30,8 @@ int main(int argCount, char* args[]) {
 	auto tokenList = tokens(content);
 	Parser parse;
 	parse.parseTokens (tokenList);
-
-	for(unsigned i = 0; i < tokenList.size(); i++) {
-		std::cout << "[" << tokenList[i]->line_number << "] " << " " << tokenList[i]->token << std::endl;
-	}
+	
+	//Program prog(parse);
 
 	//Windows pausing
 #if _WIN32

@@ -3,11 +3,12 @@
 
 #include "Keywords.h"
 #include <vector>
+#include <unordered_map>
+
+#define TOKEN_LIST const std::vector<Token*>& tokenList
 
 struct Node {
-
 	Token* token;
-	Node* parent;
 	std::vector<Node*> children;
 };
 
@@ -30,16 +31,8 @@ private:
 		}
 		return pos;
 	}
-
-	inline void linkNodes (Node* parent, Node* child) { 
-		if (child->parent == NULL) {
-			child->parent = parent;
-			parent->children.push_back (child);
-		}
-	}
-
 public:
-	void parseTokens (const std::vector<Token*>& tokenList);
+	void parseTokens (TOKEN_LIST);
 };
 
 #endif // !_PARSER
