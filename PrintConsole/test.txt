@@ -1,5 +1,4 @@
 void write5
-	int x = 2
 	repeat(int i = 0|i < 5|i++)
 		print i
 	loop

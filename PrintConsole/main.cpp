@@ -1,5 +1,6 @@
 #include "Loader.h"
 #include "Parser.h"
+#include "Program.h"
 
 #include <iostream>
 #include <string>
@@ -28,10 +29,14 @@ int main(int argCount, char* args[]) {
 	auto fileLoc = getFileLocation (argCount, args);
 	auto content = fileContents(fileLoc);
 	auto tokenList = tokens(content);
-	Parser parse;
-	parse.parseTokens (tokenList);
+	Parser::parseTokens (tokenList);
 	
-	//Program prog(parse);
+	for (unsigned i = 0; i < Parser::parsedTokens().size(); i++) {
+		Parser::readNode (Parser::parsedTokens ( )[i]);
+		std::cout<<std::endl;
+	}
+
+	Program prog;
 
 	//Windows pausing
 #if _WIN32

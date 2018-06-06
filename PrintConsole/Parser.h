@@ -32,7 +32,9 @@ private:
 		return pos;
 	}
 public:
-	void parseTokens (TOKEN_LIST);
+	static void parseTokens (TOKEN_LIST);
+	inline static std::vector<Node*> parsedTokens ( ) { return roots; }
+	static void readNode (Node* root, int depth = 0);
 };
 
 #endif // !_PARSER

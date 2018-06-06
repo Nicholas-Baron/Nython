@@ -14,7 +14,7 @@ Node* createNode(Token* t) {
 	return toRet;
 }
 
-void readNode(Node* root, int depth = 0) {
+void Parser::readNode(Node* root, int depth) {
 
 	if(root != nullptr) {
 		std::cout << "[" << depth << "]" << *(root->token) << " ";
