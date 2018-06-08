@@ -35,7 +35,7 @@ int main(int argCount, char* args[]) {
 		Parser::readNode (Parser::parsedTokens ( )[i]);
 		std::cout << " Line #"<< i << std::endl;
 	}
-
+	std::cout << std::endl;
 	Program prog;
 	prog.run("main");
 

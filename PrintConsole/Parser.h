@@ -37,6 +37,9 @@ public:
 	static void parseTokens (TOKEN_LIST);
 	inline static std::vector<Node*> parsedTokens ( ) { return roots; }
 	static void readNode (Node* root, int depth = 0);
+	inline static bool isDeclaration(Node* line) {
+		return line->children.size()>=1 && line->children[0]->token->type == TokenType::TYPE;
+	}
 };
 
 #endif // !_PARSER

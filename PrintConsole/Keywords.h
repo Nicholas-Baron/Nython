@@ -5,8 +5,10 @@
 #include <unordered_set>
 #include <string>
 
-enum class TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
+enum TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
 enum VariableType {VOID, INT, STRING, FLOAT};
+
+std::ostream& operator<<(std::ostream& lhs, const TokenType& rhs);
 
 struct Token {
 	TokenType type;

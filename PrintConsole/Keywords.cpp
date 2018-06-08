@@ -49,6 +49,19 @@ VariableType Keywords::getVarType(const Token & tok) {
 	}
 }
 
+std::ostream & operator<<(std::ostream & lhs, const TokenType & rhs) {
+	switch(rhs) {
+		case TokenType::COMMAND: lhs << "COMMAND"; break;
+		case TokenType::DELINEATOR: lhs << "DELINEATOR"; break;
+		case TokenType::IDENTIFIER: lhs << "IDENTIFIER"; break;
+		case TokenType::LITERAL: lhs << "LITERAL"; break;
+		case TokenType::OPERATOR: lhs << "OPERATOR"; break;
+		case TokenType::TYPE: lhs << "TYPE"; break;
+		default: lhs << "UNDEFINED";
+	}
+	return lhs;
+}
+
 std::ostream & operator<<(std::ostream & lhs, const Token& rhs) {
 	lhs << rhs.text;
 	return lhs;
