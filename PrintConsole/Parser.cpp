@@ -184,6 +184,18 @@ Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast) 
 
 std::vector<Node*> Parser::roots = {};
 
+void Parser::trimRoots() {
+
+	std::vector<Node*> temp;
+	for(unsigned i = 0; i < roots.size(); i++) {
+		auto t = roots[i];
+		if(t) {
+			temp.push_back(t);
+		}
+	}
+	roots = temp;
+}
+
 void Parser::parseTokens(TOKEN_LIST) {
 
 	std::vector<Node*> branches;
@@ -201,4 +213,6 @@ void Parser::parseTokens(TOKEN_LIST) {
 	}
 
 	roots = branches;
+	trimRoots();
+	roots.shrink_to_fit();
 }

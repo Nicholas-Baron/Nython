@@ -6,7 +6,7 @@ std::unordered_set<std::string>	Keywords::commands = {"print","repeat","loop","r
 std::unordered_set<std::string>	Keywords::types = {"int","void"};
 
 bool Keywords::isBinaryOp(const Token & tok) {
-	auto txt = tok.token;
+	auto txt = tok.text;
 	return (txt == "=") || (txt == "<") || (txt == "->");
 }
 
@@ -34,11 +34,26 @@ TokenType Keywords::getTokenType(const std::string & text) {
 	return type;
 }
 
+VariableType Keywords::getVarType(const Token & tok) {
+	
+	if(tok.type != TokenType::TYPE) {
+		return VOID;
+	}else if(tok.text == "int") {
+		return INT;
+	}else if(tok.text == "string") {
+		return STRING;
+	} else if(tok.text == "float") {
+		return FLOAT;
+	} else {
+		return VOID;
+	}
+}
+
 std::ostream & operator<<(std::ostream & lhs, const Token& rhs) {
-	lhs << rhs.token;
+	lhs << rhs.text;
 	return lhs;
 }
 
 bool operator==(const Token & lhs, const Token & rhs) {
-	return lhs.line_number == rhs.line_number && lhs.type == rhs.type&&lhs.token == rhs.token;
+	return lhs.line_number == rhs.line_number && lhs.type == rhs.type&&lhs.text == rhs.text;
 }

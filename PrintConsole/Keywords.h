@@ -6,10 +6,11 @@
 #include <string>
 
 enum class TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
+enum VariableType {VOID, INT, STRING, FLOAT};
 
 struct Token {
 	TokenType type;
-	std::string token;
+	std::string text;
 	unsigned line_number;
 };
 
@@ -27,16 +28,16 @@ private:
 public:
 	inline static bool isDelineator(const std::string& item) { return isContained(delineators, item); }
 	inline static bool isOperator(const std::string& item) { return isContained(operators, item); }
-	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.token == "("; }
-	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.token == ")"; }
+	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == "("; }
+	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
 	static bool isBinaryOp(const Token& tok);
-	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.token == "repeat"; }
-	inline static bool isSecondOfPairLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.token == "loop"; }
-	inline static bool needsParameter(const Token& tok) { return tok.type == TokenType::COMMAND && tok.token == "print"; }
-	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.token == "ret" || tok.token == "return"); }
+	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "repeat"; }
+	inline static bool isSecondOfPairLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
+	inline static bool needsParameter(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "print"; }
+	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "ret" || tok.text == "return"); }
 
 	static TokenType getTokenType(const std::string& text);
-
+	static VariableType getVarType(const Token& tok);
 };
 
 #endif // !_KEYWORDS

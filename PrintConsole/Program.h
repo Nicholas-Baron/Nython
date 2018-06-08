@@ -4,23 +4,32 @@
 #include "Parser.h"
 #include <stack>
 
+#define SYNTAX Parser::parsedTokens()
+
+struct pair_hash {
+	template<class T1, class T2>
+	std::size_t operator()(const std::pair<T1, T2>& pair)const {
+		return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+	}
+};
+
 class Program {
 private:
-	std::vector<Node*> syntax;
 	unsigned currentLine;
 	std::stack<unsigned> stack;
-	std::unordered_map<std::pair<std::string, std::string>, void*> variables;
+	std::unordered_map<std::pair<VariableType, std::string>, void*, pair_hash> variables;
 
-	unsigned getFuncDef (std::string name) const;
+	unsigned getFuncDef (const std::string& name) const;
 	bool finished;
 
 	void allocVariable (Node* assign);
+	bool testVariable(Node* test);
 	void removeVar (Token* id);
 
 	void loop (Node* line);
+	void exitFunction(Node* line);
 public:
-	Program ();
-	void run (std::string func);
+	void run (const std::string& func);
 };
 
 #endif

@@ -33,10 +33,11 @@ int main(int argCount, char* args[]) {
 	
 	for (unsigned i = 0; i < Parser::parsedTokens().size(); i++) {
 		Parser::readNode (Parser::parsedTokens ( )[i]);
-		std::cout<<std::endl;
+		std::cout << " Line #"<< i << std::endl;
 	}
 
 	Program prog;
+	prog.run("main");
 
 	//Windows pausing
 #if _WIN32

@@ -31,6 +31,8 @@ private:
 		}
 		return pos;
 	}
+
+	static void trimRoots();
 public:
 	static void parseTokens (TOKEN_LIST);
 	inline static std::vector<Node*> parsedTokens ( ) { return roots; }
