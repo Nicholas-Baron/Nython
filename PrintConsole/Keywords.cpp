@@ -3,7 +3,7 @@
 std::unordered_set<std::string>	Keywords::operators = {"=","<","++","->"};
 std::unordered_set<std::string>	Keywords::delineators = {"(",")","|"};
 std::unordered_set<std::string>	Keywords::commands = {"print","repeat","loop","ret","return"};
-std::unordered_set<std::string>	Keywords::types = {"int","void"};
+std::unordered_set<std::string>	Keywords::types = {"int","void","float","string","char"};
 
 bool Keywords::isBinaryOp(const Token & tok) {
 	auto txt = tok.text;

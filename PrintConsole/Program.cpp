@@ -20,10 +20,25 @@ void Program::allocVariable (Node * assign) {
 
 	std::string name = assign->children[0]->token->text;
 	VariableType type = Keywords::getVarType(*(assign->children[0]->children[0]->token));
-	void* value = &(assign->children[1]->token->text);
-
 	varTyping[name] = type;
-	variables[std::pair<VariableType, std::string>(type, name)] = value;
+	
+	std::string value = assign->children[1]->token->text;
+	switch (type) {
+		case INT:
+			varsInt[name] = atoi (value.c_str ( ));
+			break;
+		case STRING:
+			varsText[name] = value;
+			break;
+		case FLOAT:
+			varsFloat[name] = atof (value.c_str ( ));
+			break;
+		case CHAR:
+			varsChar[name] = value[1];
+		case VOID:
+		default:
+			break;
+	}
 
 	std::cout << "Created variable " << name << std::endl;
 }
@@ -34,7 +49,19 @@ void * Program::getValue(const std::string & name, const VariableType& expectedT
 		std::cout << "Unsupported action!" << std::endl;
 		return nullptr;
 	}
-	return variables[std::pair<VariableType, std::string>(expectedType, name)];
+	switch (expectedType) {
+		case INT:
+			return &varsInt[name];
+		case FLOAT:
+			return &varsFloat[name];
+		case CHAR:
+			return &varsChar[name];
+		case STRING:
+			return &varsText[name];
+		case VOID:
+		default:
+			return NULL;
+	}
 }
 
 bool Program::testVariable(Node * test) {
@@ -51,10 +78,26 @@ bool Program::testVariable(Node * test) {
 	}
 
 
+
+
 	return false;
 }
 
-void Program::removeVar (Token * id) { }
+void Program::removeVar (Token * id) { 
+	auto name = id->text;
+	std::cout << "Deleting variable " << name << std::endl;
+	auto type = varTyping[name];
+	switch (type) {
+		case INT:
+			varsInt.erase (name); break;
+		case FLOAT:
+			varsFloat.erase (name); break;
+		case STRING:
+			varsText.erase (name); break;
+		case CHAR:
+			varsChar.erase (name); break;
+	}
+}
 
 
 void Program::run (const std::string& func) {
@@ -92,10 +135,12 @@ void Program::loop (Node* line) {
 	auto testNode = (line->children.size() == 4) ? line->children[1]->children[0] : line->children[0]->children[0];
 
 	if (line->children.size() == 4) {
-		allocVariable (line->children[0]->children[0]);
+		auto initializer = line->children[0]->children[0];
+		allocVariable (initializer);
 		while(testVariable(testNode)) {
 		
 		}
+		removeVar (initializer->children[0]->token);
 	}
 	//FINISH LOOP
 }

@@ -6,7 +6,7 @@
 #include <string>
 
 enum TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
-enum VariableType {VOID, INT, STRING, FLOAT};
+enum VariableType {VOID, INT, STRING, FLOAT, CHAR};
 
 std::ostream& operator<<(std::ostream& lhs, const TokenType& rhs);
 
