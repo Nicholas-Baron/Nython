@@ -38,6 +38,7 @@ int main(int argCount, char* args[]) {
 	std::cout << std::endl;
 	Program prog;
 	prog.run("main");
+	std::cout << std::endl;
 
 	//Windows pausing
 #if _WIN32

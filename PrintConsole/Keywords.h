@@ -9,6 +9,7 @@ enum TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
 enum VariableType {VOID, INT, STRING, FLOAT, CHAR};
 
 std::ostream& operator<<(std::ostream& lhs, const TokenType& rhs);
+std::ostream& operator<<(std::ostream& lhs, const VariableType& rhs);
 
 struct Token {
 	TokenType type;
@@ -40,6 +41,21 @@ public:
 
 	static TokenType getTokenType(const std::string& text);
 	static VariableType getVarType(const Token& tok);
+
+	template<class T, class U>
+	static bool opProcess (const std::string& op, T left, U right);
 };
+
+template<class T, class U>
+inline bool Keywords::opProcess (const std::string & op, T left, U right) {
+	if (op == "<") {
+		return left < right;
+	} else if (op == "==") {
+		return left == right;
+	} else if(op == ">"){
+		return left > right;
+	}
+	return false;
+}
 
 #endif // !_KEYWORDS

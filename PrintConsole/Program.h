@@ -25,6 +25,7 @@ private:
 	void removeVar (Token* id);
 
 	void loop (Node* line);
+	void incrOrDecr (Node* line);
 	void print(Node* line);
 	void exitFunction(Node* line);
 public:

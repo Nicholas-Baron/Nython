@@ -1,5 +1,6 @@
 #include "Program.h"
 #include <iostream>
+#include <string>
 
 unsigned Program::getFuncDef (const std::string& name) const {
 
@@ -25,13 +26,13 @@ void Program::allocVariable (Node * assign) {
 	std::string value = assign->children[1]->token->text;
 	switch (type) {
 		case INT:
-			varsInt[name] = atoi (value.c_str ( ));
+			varsInt[name] = stoi (value);
 			break;
 		case STRING:
 			varsText[name] = value;
 			break;
 		case FLOAT:
-			varsFloat[name] = atof (value.c_str ( ));
+			varsFloat[name] = stof (value);
 			break;
 		case CHAR:
 			varsChar[name] = value[1];
@@ -39,8 +40,6 @@ void Program::allocVariable (Node * assign) {
 		default:
 			break;
 	}
-
-	std::cout << "Created variable " << name << std::endl;
 }
 
 void * Program::getValue(const std::string & name, const VariableType& expectedType) {
@@ -69,23 +68,54 @@ bool Program::testVariable(Node * test) {
 	auto left = test->children[0];
 	auto right = test->children[1];
 	
-	VariableType typecast = VariableType::VOID;
-	if(left->token->type == TokenType::IDENTIFIER) {
-		typecast = varTyping[left->token->text];
+	auto leftType = VariableType::VOID;
+	if (left->token->type == TokenType::IDENTIFIER) {
+		leftType = varTyping[left->token->text];
 	}
-	if(right->token->type == TokenType::IDENTIFIER && typecast == VOID) {
-		typecast = varTyping[left->token->text];
+	
+	auto rightType = VariableType::VOID;
+	if (right->token->type == TokenType::IDENTIFIER) {
+		rightType = varTyping[right->token->text];
 	}
 
+	if (leftType == VariableType::FLOAT || rightType == VariableType::FLOAT) { 
+		float l, r;
+		if (left->token->type == TokenType::IDENTIFIER) {
+			l = *(float*)getValue (left->token->text, leftType);
+		} else if (left->token->type == TokenType::LITERAL) {
+			l = stof (left->token->text);
+		}
 
+		if (right->token->type == TokenType::IDENTIFIER) {
+			r = *(float*) getValue (right->token->text, leftType);
+		} else if (right->token->type == TokenType::LITERAL) {
+			r = stof (right->token->text);
+		}
 
+		return Keywords::opProcess (txt, l, r);
+
+	} else if (leftType == VariableType::INT || rightType == VariableType::INT) {
+		int l, r;
+		if (left->token->type == TokenType::IDENTIFIER) {
+			l = *(int*) getValue (left->token->text, leftType);
+		} else if (left->token->type == TokenType::LITERAL) {
+			l = stoi (left->token->text);
+		}
+
+		if (right->token->type == TokenType::IDENTIFIER) {
+			r = *(int*) getValue (right->token->text, leftType);
+		} else if (right->token->type == TokenType::LITERAL) {
+			r = stoi (right->token->text);
+		}
+
+		return Keywords::opProcess (txt, l, r);
+	}
 
 	return false;
 }
 
 void Program::removeVar (Token * id) { 
 	auto name = id->text;
-	std::cout << "Deleting variable " << name << std::endl;
 	auto type = varTyping[name];
 	switch (type) {
 		case INT:
@@ -109,9 +139,6 @@ void Program::run (const std::string& func) {
 		auto tokType = line->token->type;
 		auto tokTxt = line->token->text;
 
-		Parser::readNode(line);
-		std::cout << "  " << tokType<<" @ "<<currentLine;
-		std::cout << std::endl;
 		if (tokType == TokenType::IDENTIFIER) {
 			stack.push (currentLine);
 			run (tokTxt);
@@ -130,6 +157,28 @@ void Program::run (const std::string& func) {
 
 }
 
+void Program::incrOrDecr (Node* line) { 
+
+	auto txt = line->token->text;
+	auto var = line->children[0]->token->text;
+
+	if (txt == "++") {
+		auto type = varTyping[var];
+		if (type == VariableType::INT) {
+			varsInt[var]++;
+		} else if (type == VariableType::FLOAT) {
+			varsFloat[var]++;
+		}
+	} else if (txt == "--") {
+		auto type = varTyping[var];
+		if (type == VariableType::INT) {
+			varsInt[var]--;
+		} else if (type == VariableType::FLOAT) {
+			varsFloat[var]--;
+		}
+	}
+}
+
 void Program::loop (Node* line) { 
 
 	auto testNode = (line->children.size() == 4) ? line->children[1]->children[0] : line->children[0]->children[0];
@@ -138,11 +187,26 @@ void Program::loop (Node* line) {
 		auto initializer = line->children[0]->children[0];
 		allocVariable (initializer);
 		while(testVariable(testNode)) {
-		
+			for (unsigned i = 0; i < line->children[3]->children.size ( );i++ ) {
+				auto tokType = line->children[3]->children[i]->token->type;
+				auto tokTxt = line->children[3]->children[i]->token->text;
+				if (tokType == TokenType::IDENTIFIER) {
+					stack.push (currentLine);
+					run (tokTxt);
+				} else if (tokType == TokenType::COMMAND) {
+					if (tokTxt == "repeat") {
+						loop (line->children[3]->children[i]);
+					} else if (tokTxt == "ret" || tokTxt == "return") {
+						exitFunction (line->children[3]->children[i]);
+					} else if (tokTxt == "print") {
+						print (line->children[3]->children[i]);
+					}
+				}
+			}
+			incrOrDecr (line->children[2]->children[0]);
 		}
 		removeVar (initializer->children[0]->token);
 	}
-	//FINISH LOOP
 }
 
 void Program::print(Node * line) {
@@ -150,6 +214,15 @@ void Program::print(Node * line) {
 
 	if(tok->type==TokenType::LITERAL) {
 		std::cout << tok->text;
+	} else if (tok->type==TokenType::IDENTIFIER) {
+		auto type = varTyping[tok->text];
+		if (type == VariableType::FLOAT) {
+			float val = varsFloat[tok->text];
+			std::cout << val;
+		} else if (type == VariableType::INT) {
+			int val = varsInt[tok->text];
+			std::cout << val;
+		}
 	}
 }
 

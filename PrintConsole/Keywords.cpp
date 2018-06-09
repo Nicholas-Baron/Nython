@@ -62,6 +62,18 @@ std::ostream & operator<<(std::ostream & lhs, const TokenType & rhs) {
 	return lhs;
 }
 
+std::ostream & operator<<(std::ostream & lhs, const VariableType & rhs) {
+	switch (rhs) {
+		case VariableType::CHAR: lhs << "CHAR"; break;
+		case VariableType::FLOAT:lhs << "FLOAT"; break;
+		case VariableType::INT:lhs << "INT"; break;
+		case VariableType::STRING:lhs << "STRING"; break;
+		case VariableType::VOID:lhs << "VOID"; break;
+		default:lhs << "UNDEFINED";
+	}
+	return lhs;
+}
+
 std::ostream & operator<<(std::ostream & lhs, const Token& rhs) {
 	lhs << rhs.text;
 	return lhs;
