@@ -14,7 +14,7 @@ struct Node {
 
 class Parser {
 private:
-	static std::vector<Node*> roots;
+	std::vector<Node*> roots;
 
 	template<class T>
 	inline static bool contains (const std::vector<T>& list, T find) { 
@@ -31,11 +31,12 @@ private:
 		}
 		return pos;
 	}
-
-	static void trimRoots();
+	
+	std::vector<Node*> parseTokens(TOKEN_LIST);
+	void trimRoots();
 public:
-	static void parseTokens (TOKEN_LIST);
-	inline static std::vector<Node*> parsedTokens ( ) { return roots; }
+	Parser(TOKEN_LIST);
+	inline std::vector<Node*> parsedTokens ( ) const { return roots; }
 	static void readNode (Node* root, int depth = 0);
 	inline static bool isDeclaration(Node* line) {
 		return line->children.size()>=1 && line->children[0]->token->type == TokenType::TYPE;

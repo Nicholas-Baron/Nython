@@ -31,15 +31,15 @@ int main(int argCount, char* args[]) {
 	auto fileLoc = getFileLocation (argCount, args);
 	auto content = fileContents(fileLoc);
 	auto tokenList = tokens(content);
-	Parser::parseTokens (tokenList);
+	auto parseTree = Parser(tokenList);
 	if(PRINT_PARSE_TREE) {
-		for(unsigned i = 0; i < Parser::parsedTokens().size(); i++) {
-			Parser::readNode(Parser::parsedTokens()[i]);
+		for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
+			Parser::readNode(parseTree.parsedTokens()[i]);
 			std::cout << " Line #" << i << std::endl;
 		}
 	}
 	std::cout << std::endl;
-	Program prog;
+	Program prog(parseTree);
 	prog.run("main");
 	std::cout << std::endl;
 

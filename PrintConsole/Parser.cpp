@@ -182,8 +182,6 @@ Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast) 
 	return toRet;
 }
 
-std::vector<Node*> Parser::roots = {};
-
 void Parser::trimRoots() {
 
 	std::vector<Node*> temp;
@@ -196,7 +194,13 @@ void Parser::trimRoots() {
 	roots = temp;
 }
 
-void Parser::parseTokens(TOKEN_LIST) {
+Parser::Parser(TOKEN_LIST) {
+	roots = parseTokens(tokenList);
+	trimRoots();
+	roots.shrink_to_fit();
+}
+
+std::vector<Node*> Parser::parseTokens(TOKEN_LIST) {
 
 	std::vector<Node*> branches;
 	for(unsigned i = 0; i < tokenList.size(); i++) {
@@ -211,8 +215,5 @@ void Parser::parseTokens(TOKEN_LIST) {
 		branches.push_back(parseToken(tokenList, t, i, next, isLast));
 
 	}
-
-	roots = branches;
-	trimRoots();
-	roots.shrink_to_fit();
+	return branches;
 }

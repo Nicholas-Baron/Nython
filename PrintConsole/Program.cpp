@@ -2,11 +2,11 @@
 #include <iostream>
 #include <string>
 
-unsigned Program::getFuncDef (const std::string& name) const {
+int Program::getFuncDef (const std::string& name) const {
 
-	unsigned start = 0;
-	for (unsigned i = 0; i < SYNTAX.size(); i++) {
-		auto nod = SYNTAX[i];
+	int start = -1 * lines.size();
+	for (unsigned i = 0; i < lines.size(); i++) {
+		auto nod = lines[i];
 		if(nod) {
 			if(nod->token->text == name&&Parser::isDeclaration(nod)) {
 				start = i;
@@ -14,11 +14,19 @@ unsigned Program::getFuncDef (const std::string& name) const {
 		}
 	}
 
+	if(start < 0) {
+		std::cerr << "Could not find function " << name << std::endl;
+	}
+
 	return start;
 }
 
 void Program::allocVariable (Node * assign) { 
 
+	if(variableExists(assign->children[0]->token, false)) {
+		std::cerr << "Please use a = without declaring the type" << std::endl;
+		return;
+	}
 	std::string name = assign->children[0]->token->text;
 	VariableType type = Keywords::getVarType(*(assign->children[0]->children[0]->token));
 	varTyping[name] = type;
@@ -42,10 +50,12 @@ void Program::allocVariable (Node * assign) {
 	}
 }
 
-bool Program::variableExists(Token* id) {
+bool Program::variableExists(Token* id, bool printError) const {
 	if(varTyping.find(id->text) == varTyping.end()) {
-		std::cerr << "Line #" << id->line_number + 1 << ": ";
-		std::cerr << "Variable " << id->text << " does not exist!" << std::endl;
+		if(printError) {
+			std::cerr << "Line #" << id->line_number + 1 << ": ";
+			std::cerr << "Variable " << id->text << " does not exist!" << std::endl;
+		}
 		return false;
 	}
 	return true;
@@ -133,8 +143,10 @@ bool Program::testVariable(Node * test) {
 
 void Program::removeVar (Token * id) { 
 	auto name = id->text;
-	auto type = varTyping[name];
-	switch (type) {
+	if(!variableExists(id)) {
+		return;
+	}
+	switch (varTyping[name]) {
 		case INT:
 			varsInt.erase (name); break;
 		case FLOAT:
@@ -152,7 +164,7 @@ void Program::run (const std::string& func) {
 	currentLine = getFuncDef (func) + 1;
 	
 	while (!finished) {
-		auto line = SYNTAX[currentLine];
+		auto line = lines[currentLine];
 		auto tokType = line->token->type;
 		auto tokTxt = line->token->text;
 
@@ -166,6 +178,8 @@ void Program::run (const std::string& func) {
 				exitFunction(line);
 			} else if(tokTxt == "print") {
 				print(line);
+			} else if(tokTxt == "endline"){
+				std::cout << std::endl;
 			}
 		}
 
@@ -217,7 +231,7 @@ void Program::loop (Node* line) {
 						exitFunction (line->children[3]->children[i]);
 					} else if (tokTxt == "print") {
 						print (line->children[3]->children[i]);
-					}
+					} else if(tokTxt == "endline") { std::cout << std::endl; }
 				}
 			}
 			incrOrDecr (line->children[2]->children[0]);

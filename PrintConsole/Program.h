@@ -4,10 +4,9 @@
 #include "Parser.h"
 #include <stack>
 
-#define SYNTAX Parser::parsedTokens()
-
 class Program {
 private:
+	std::vector<Node*> lines;
 	unsigned currentLine;
 	std::stack<unsigned> stack;
 	std::unordered_map<std::string, int> varsInt;
@@ -16,13 +15,13 @@ private:
 	std::unordered_map<std::string, std::string> varsText;
 	std::unordered_map<std::string, VariableType> varTyping;
 
-	unsigned getFuncDef (const std::string& name) const;
+	int getFuncDef (const std::string& name) const;
 	bool finished;
 
 	void allocVariable (Node* assign);
 	void* getValue(Token* id, const VariableType& expectedType);
 	bool testVariable(Node* test);
-	bool variableExists(Token* id);
+	bool variableExists(Token* id, bool printError = true) const;
 	void removeVar (Token* id);
 
 	void loop (Node* line);
@@ -30,6 +29,7 @@ private:
 	void print(Node* line);
 	void exitFunction(Node* line);
 public:
+	Program(const Parser& tree) :lines(tree.parsedTokens()) {}
 	void run (const std::string& func);
 };
 
