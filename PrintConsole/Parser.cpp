@@ -137,8 +137,10 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			Node* param = createNode(next);
 			comm->children.push_back(param);
 			pos++;
-		} else if(Keywords::isFuncEnd(*(comm->token))) {
-			
+		} else if(Keywords::isFuncEnd(*(comm->token)) && next->type == LITERAL) {
+			Node* param = createNode(next);
+			comm->children.push_back(param);
+			pos++;
 		}
 	
 	}

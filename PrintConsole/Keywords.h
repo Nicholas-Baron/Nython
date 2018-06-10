@@ -2,7 +2,7 @@
 #define _KEYWORDS
 
 #include <cctype>
-#include <unordered_set>
+#include <vector>
 #include <string>
 
 enum TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
@@ -22,11 +22,15 @@ bool operator==(const Token& lhs, const Token& rhs);
 
 class Keywords {
 private:
-	static std::unordered_set<std::string> operators, delineators, commands, types;
+	static std::vector<std::string> operators, delineators, commands, types;
 
 	template<class T>
-	inline static bool isContained (std::unordered_set<T> set, T element) {
-		return set.find (element) != set.end ( );
+	inline static bool isContained (std::vector<T> set, T element) {
+		bool contains = false;
+		for(unsigned i = 0; i < set.size(); i++) {
+			if(element == set[i]) contains = true;
+		}
+		return contains;
 	}
 public:
 	inline static bool isDelineator(const std::string& item) { return isContained(delineators, item); }
@@ -42,9 +46,22 @@ public:
 	static TokenType getTokenType(const std::string& text);
 	static VariableType getVarType(const Token& tok);
 
+	static void printKeywords();
+
 	template<class T, class U>
 	static bool opProcess (const std::string& op, T left, U right);
 };
+
+template<class T>
+std::ostream& operator<<(std::ostream& lhs, std::vector<T> list) {
+	for(unsigned i = 0; i < list.size(); i++) {
+		lhs << list[i];
+		if(i != list.size() - 1) {
+			lhs << ", ";
+		}
+	}
+	return lhs;
+}
 
 template<class T, class U>
 inline bool Keywords::opProcess (const std::string & op, T left, U right) {

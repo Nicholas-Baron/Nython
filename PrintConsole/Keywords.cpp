@@ -1,9 +1,10 @@
 #include "Keywords.h"
+#include <iostream>
 
-std::unordered_set<std::string>	Keywords::operators = {"=","<","++","->"};
-std::unordered_set<std::string>	Keywords::delineators = {"(",")","|"};
-std::unordered_set<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline"};
-std::unordered_set<std::string>	Keywords::types = {"int","void","float","string","char"};
+std::vector<std::string>	Keywords::operators = {"=","<","++","->"};
+std::vector<std::string>	Keywords::delineators = {"(",")","|"};
+std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline"};
+std::vector<std::string>	Keywords::types = {"int","void","float","string","char"};
 
 bool Keywords::isBinaryOp(const Token & tok) {
 	auto txt = tok.text;
@@ -47,6 +48,14 @@ VariableType Keywords::getVarType(const Token & tok) {
 	} else {
 		return VOID;
 	}
+}
+
+void Keywords::printKeywords() {
+	
+	std::cout << "Operators: " << operators << std::endl;
+	std::cout << "Delineators: " << delineators << std::endl;
+	std::cout << "Commands: " << commands << std::endl;
+	std::cout << "Variable Types: " << types << std::endl;
 }
 
 std::ostream & operator<<(std::ostream & lhs, const TokenType & rhs) {

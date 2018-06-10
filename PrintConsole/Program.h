@@ -9,13 +9,15 @@ private:
 	std::vector<Node*> lines;
 	unsigned currentLine;
 	std::stack<unsigned> stack;
+	VariableType mainExpectedReturn = VOID;
+	
 	std::unordered_map<std::string, int> varsInt;
 	std::unordered_map<std::string, char16_t> varsChar;
 	std::unordered_map<std::string, float> varsFloat;
 	std::unordered_map<std::string, std::string> varsText;
 	std::unordered_map<std::string, VariableType> varTyping;
 
-	int getFuncDef (const std::string& name) const;
+	int getFuncDef (const std::string& name);
 	bool finished;
 
 	void allocVariable (Node* assign);
@@ -27,6 +29,7 @@ private:
 	void loop (Node* line);
 	void incrOrDecr (Node* line);
 	void print(Node* line);
+	void processCommand(Node* line);
 	void exitFunction(Node* line);
 public:
 	Program(const Parser& tree) :lines(tree.parsedTokens()) {}

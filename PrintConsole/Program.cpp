@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-int Program::getFuncDef (const std::string& name) const {
+int Program::getFuncDef (const std::string& name) {
 
 	int start = -1 * lines.size();
 	for (unsigned i = 0; i < lines.size(); i++) {
@@ -10,6 +10,9 @@ int Program::getFuncDef (const std::string& name) const {
 		if(nod) {
 			if(nod->token->text == name&&Parser::isDeclaration(nod)) {
 				start = i;
+				if(name == "main") {
+					mainExpectedReturn = Keywords::getVarType(*(nod->children[0]->token));
+				}
 			}
 		}
 	}
@@ -163,6 +166,7 @@ void Program::run (const std::string& func) {
 
 	currentLine = getFuncDef (func) + 1;
 	
+
 	while (!finished) {
 		auto line = lines[currentLine];
 		auto tokType = line->token->type;
@@ -172,15 +176,7 @@ void Program::run (const std::string& func) {
 			stack.push (currentLine);
 			run (tokTxt);
 		} else if(tokType == TokenType::COMMAND){
-			if (tokTxt == "repeat") {
-				loop (line);
-			} else if (tokTxt == "ret" || tokTxt == "return"){
-				exitFunction(line);
-			} else if(tokTxt == "print") {
-				print(line);
-			} else if(tokTxt == "endline"){
-				std::cout << std::endl;
-			}
+			processCommand(line);
 		}
 
 		currentLine++;
@@ -225,13 +221,7 @@ void Program::loop (Node* line) {
 					stack.push (currentLine);
 					run (tokTxt);
 				} else if (tokType == TokenType::COMMAND) {
-					if (tokTxt == "repeat") {
-						loop (line->children[3]->children[i]);
-					} else if (tokTxt == "ret" || tokTxt == "return") {
-						exitFunction (line->children[3]->children[i]);
-					} else if (tokTxt == "print") {
-						print (line->children[3]->children[i]);
-					} else if(tokTxt == "endline") { std::cout << std::endl; }
+					processCommand(line->children[3]->children[i]);
 				}
 			}
 			incrOrDecr (line->children[2]->children[0]);
@@ -240,12 +230,23 @@ void Program::loop (Node* line) {
 	}
 }
 
+void Program::processCommand(Node* line) {
+	auto tokTxt = line->token->text;
+	if(tokTxt == "repeat") {
+		loop(line);
+	} else if(tokTxt == "ret" || tokTxt == "return") {
+		exitFunction(line);
+	} else if(tokTxt == "print") {
+		print(line);
+	} else if(tokTxt == "endline") { std::cout << std::endl; }
+}
+
 void Program::print(Node * line) {
 	auto tok = line->children[0]->token;
 
-	if(tok->type==TokenType::LITERAL) {
+	if(tok->type == LITERAL) {
 		std::cout << tok->text;
-	} else if (tok->type==TokenType::IDENTIFIER && variableExists(tok)) {
+	} else if (tok->type == IDENTIFIER && variableExists(tok)) {
 		
 		auto type = varTyping[tok->text];
 		if (type == VariableType::FLOAT) {
@@ -261,6 +262,34 @@ void Program::print(Node * line) {
 void Program::exitFunction(Node* line) {
 	if(stack.empty()) {
 		finished = true;
+		auto tokToRet = line->children[0]->token;
+		if(tokToRet->type == IDENTIFIER) {
+			switch(mainExpectedReturn) {
+				case INT:
+					std::cout << "Main returned " << *((int*)getValue(tokToRet, mainExpectedReturn)) << std::endl;
+					break;
+				case STRING:
+					std::cout << "Main returned " << *((std::string*) getValue(tokToRet, mainExpectedReturn)) << std::endl;
+					break;
+				case VOID:
+				default:
+					break;
+
+			}
+		} else if(tokToRet->type == LITERAL) {
+			switch(mainExpectedReturn) {
+				case INT:
+					std::cout << "Main returned " << stoi(tokToRet->text) << std::endl;
+					break;
+				case STRING:
+					std::cout << "Main returned " << tokToRet->text << std::endl;
+					break;
+				case VOID:
+				default:
+					break;
+
+			}
+		}
 	} else {
 		currentLine = stack.top();
 		stack.pop();

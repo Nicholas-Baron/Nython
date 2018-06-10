@@ -7,15 +7,12 @@
 
 #define PRINT_PARSE_TREE 0
 
-std::string getFileLocation (int argCount, char* args[] ) {
+std::string getFileLocation () {
+	
 	std::string fileLoc;
-	if (argCount >= 2) {
-		fileLoc = args[1];
-	} else {
-		std::cout << "Enter a file to load: ";
-		std::cin >> fileLoc;
-	}
-
+	std::cout << "Enter a file to load: ";
+	std::cin >> fileLoc;
+	
 	//Ensure valid location
 	while (!isValidFile (fileLoc)) {
 		std::cout << "Invalid file " << fileLoc << std::endl;
@@ -26,9 +23,8 @@ std::string getFileLocation (int argCount, char* args[] ) {
 	return fileLoc;
 }
 
-int main(int argCount, char* args[]) {
-
-	auto fileLoc = getFileLocation (argCount, args);
+void runInterpreter() {
+	auto fileLoc = getFileLocation();
 	auto content = fileContents(fileLoc);
 	auto tokenList = tokens(content);
 	auto parseTree = Parser(tokenList);
@@ -42,11 +38,34 @@ int main(int argCount, char* args[]) {
 	Program prog(parseTree);
 	prog.run("main");
 	std::cout << std::endl;
+}
 
-	//Windows pausing
-#if _WIN32
-	system("pause");
-#endif // _WIN32
+int main() {
 
+	unsigned option;
+
+	do {
+		std::cout << "Nython v1.0a" << std::endl;
+		std::cout << "0. Exit" << std::endl;
+		std::cout << "1. Reserved Word List" << std::endl;
+		std::cout << "2. Run Interpreter" << std::endl;
+		std::cout << "3. [Construction Here]" << std::endl;
+		
+		std::cout << "Select an option: ";
+		std::cin >> option;
+		std::cout << std::endl;
+
+		switch(option) {
+			case 1:
+				Keywords::printKeywords(); break;
+			case 2:
+				runInterpreter(); break;
+			default:
+				std::cout << "Invalid option" << std::endl; break;
+			case 0: break; //Jumps over everything
+		}
+		std::cout << std::endl;
+	
+	} while(option != 0);
 	return 0;
 }
