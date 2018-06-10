@@ -42,21 +42,34 @@ void Program::allocVariable (Node * assign) {
 	}
 }
 
-void * Program::getValue(const std::string & name, const VariableType& expectedType) {
-	auto type = varTyping[name];
+bool Program::variableExists(Token* id) {
+	if(varTyping.find(id->text) == varTyping.end()) {
+		std::cerr << "Line #" << id->line_number + 1 << ": ";
+		std::cerr << "Variable " << id->text << " does not exist!" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+void * Program::getValue(Token* id, const VariableType& expectedType) {
+	if(!variableExists(id)) {
+		return nullptr;
+	}
+	
+	auto type = varTyping[id->text];
 	if(expectedType != type) {
 		std::cout << "Unsupported action!" << std::endl;
 		return nullptr;
 	}
 	switch (expectedType) {
 		case INT:
-			return &varsInt[name];
+			return &varsInt[id->text];
 		case FLOAT:
-			return &varsFloat[name];
+			return &varsFloat[id->text];
 		case CHAR:
-			return &varsChar[name];
+			return &varsChar[id->text];
 		case STRING:
-			return &varsText[name];
+			return &varsText[id->text];
 		case VOID:
 		default:
 			return NULL;
@@ -70,24 +83,28 @@ bool Program::testVariable(Node * test) {
 	
 	auto leftType = VariableType::VOID;
 	if (left->token->type == TokenType::IDENTIFIER) {
-		leftType = varTyping[left->token->text];
+		if(variableExists(left->token)) {
+			leftType = varTyping[left->token->text];
+		} 
 	}
 	
 	auto rightType = VariableType::VOID;
 	if (right->token->type == TokenType::IDENTIFIER) {
-		rightType = varTyping[right->token->text];
+		if(variableExists(right->token)) {
+			rightType = varTyping[right->token->text];
+		} 
 	}
 
 	if (leftType == VariableType::FLOAT || rightType == VariableType::FLOAT) { 
 		float l, r;
 		if (left->token->type == TokenType::IDENTIFIER) {
-			l = *(float*)getValue (left->token->text, leftType);
+			l = *(float*)getValue (left->token, leftType);
 		} else if (left->token->type == TokenType::LITERAL) {
 			l = stof (left->token->text);
 		}
 
 		if (right->token->type == TokenType::IDENTIFIER) {
-			r = *(float*) getValue (right->token->text, leftType);
+			r = *(float*) getValue (right->token, leftType);
 		} else if (right->token->type == TokenType::LITERAL) {
 			r = stof (right->token->text);
 		}
@@ -97,13 +114,13 @@ bool Program::testVariable(Node * test) {
 	} else if (leftType == VariableType::INT || rightType == VariableType::INT) {
 		int l, r;
 		if (left->token->type == TokenType::IDENTIFIER) {
-			l = *(int*) getValue (left->token->text, leftType);
+			l = *(int*) getValue (left->token, leftType);
 		} else if (left->token->type == TokenType::LITERAL) {
 			l = stoi (left->token->text);
 		}
 
 		if (right->token->type == TokenType::IDENTIFIER) {
-			r = *(int*) getValue (right->token->text, leftType);
+			r = *(int*) getValue (right->token, leftType);
 		} else if (right->token->type == TokenType::LITERAL) {
 			r = stoi (right->token->text);
 		}
@@ -214,7 +231,8 @@ void Program::print(Node * line) {
 
 	if(tok->type==TokenType::LITERAL) {
 		std::cout << tok->text;
-	} else if (tok->type==TokenType::IDENTIFIER) {
+	} else if (tok->type==TokenType::IDENTIFIER && variableExists(tok)) {
+		
 		auto type = varTyping[tok->text];
 		if (type == VariableType::FLOAT) {
 			float val = varsFloat[tok->text];

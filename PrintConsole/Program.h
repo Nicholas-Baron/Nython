@@ -20,8 +20,9 @@ private:
 	bool finished;
 
 	void allocVariable (Node* assign);
-	void* getValue(const std::string & name, const VariableType& expectedType);
+	void* getValue(Token* id, const VariableType& expectedType);
 	bool testVariable(Node* test);
+	bool variableExists(Token* id);
 	void removeVar (Token* id);
 
 	void loop (Node* line);
