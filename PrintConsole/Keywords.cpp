@@ -1,9 +1,10 @@
 #include "Keywords.h"
-#include <iostream>
+
+#include <cctype>
 
 std::vector<std::string>	Keywords::operators = {"=","<","++","->"};
 std::vector<std::string>	Keywords::delineators = {"(",")","|"};
-std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline"};
+std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif"};
 std::vector<std::string>	Keywords::types = {"int","void","float","string","char"};
 
 bool Keywords::isBinaryOp(const Token & tok) {
@@ -20,13 +21,13 @@ TokenType Keywords::getTokenType(const std::string & text) {
 
 	TokenType type = TokenType::IDENTIFIER;
 
-	if(isContained(operators, text)) {
+	if(contains(operators, text)) {
 		type = TokenType::OPERATOR;
-	} else if(isContained(delineators, text)) {
+	} else if(contains(delineators, text)) {
 		type = TokenType::DELINEATOR;
-	} else if(isContained(commands, text)) {
+	} else if(contains(commands, text)) {
 		type = TokenType::COMMAND;
-	} else if(isContained(types, text)) {
+	} else if(contains(types, text)) {
 		type = TokenType::TYPE;
 	} else if(text.find_first_of("\"") == 0 || isdigit(text[0])) {
 		type = TokenType::LITERAL;

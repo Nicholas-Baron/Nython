@@ -2,6 +2,7 @@
 #define _PROGRAM
 
 #include "Parser.h"
+#include <unordered_map>
 #include <stack>
 
 class Program {

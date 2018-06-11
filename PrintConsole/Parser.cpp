@@ -1,7 +1,5 @@
 #include "Parser.h"
 
-#include <iostream>
-
 void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos);
 void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next);
 void parseLoop(TOKEN_LIST, Node* addTo, unsigned start, unsigned end);

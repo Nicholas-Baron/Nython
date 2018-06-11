@@ -1,7 +1,8 @@
 #ifndef _KEYWORDS
 #define _KEYWORDS
 
-#include <cctype>
+#include "VectorUtil.h"
+
 #include <vector>
 #include <string>
 
@@ -24,17 +25,9 @@ class Keywords {
 private:
 	static std::vector<std::string> operators, delineators, commands, types;
 
-	template<class T>
-	inline static bool isContained (std::vector<T> set, T element) {
-		bool contains = false;
-		for(unsigned i = 0; i < set.size(); i++) {
-			if(element == set[i]) contains = true;
-		}
-		return contains;
-	}
 public:
-	inline static bool isDelineator(const std::string& item) { return isContained(delineators, item); }
-	inline static bool isOperator(const std::string& item) { return isContained(operators, item); }
+	inline static bool isDelineator(const std::string& item) { return contains(delineators, item); }
+	inline static bool isOperator(const std::string& item) { return contains(operators, item); }
 	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == "("; }
 	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
 	static bool isBinaryOp(const Token& tok);
@@ -51,17 +44,6 @@ public:
 	template<class T, class U>
 	static bool opProcess (const std::string& op, T left, U right);
 };
-
-template<class T>
-std::ostream& operator<<(std::ostream& lhs, std::vector<T> list) {
-	for(unsigned i = 0; i < list.size(); i++) {
-		lhs << list[i];
-		if(i != list.size() - 1) {
-			lhs << ", ";
-		}
-	}
-	return lhs;
-}
 
 template<class T, class U>
 inline bool Keywords::opProcess (const std::string & op, T left, U right) {
