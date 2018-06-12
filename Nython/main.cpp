@@ -6,7 +6,8 @@
 #include <string>
 
 #define PRINT_PARSE_TREE 0
-
+/*maybe add some documentation so other people(me included) can understand what each function does. Great code btw, I see alot of 
+the design patters in this code that the enterprise lecture talked about good stuff.*/
 std::string getFileLocation () {
 	
 	std::string fileLoc;
