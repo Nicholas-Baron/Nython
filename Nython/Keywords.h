@@ -30,7 +30,7 @@ public:
 	inline static bool isOperator(const std::string& item) { return contains(operators, item); }
 	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == "("; }
 	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
-	static bool isBinaryOp(const Token& tok);
+	inline static bool isBinaryOp(const Token& tok) { return isOperator(tok.text) && tok.text != "++"&&tok.text != "--"; }
 	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "repeat"; }
 	inline static bool isConditionalStart(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "if" || tok.text == "elif"); }
 	inline static bool isSecondOfPairLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }

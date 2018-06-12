@@ -11,9 +11,7 @@ int fib(int n)
 	else ret fib(n-1) + fib(n-2)
 
 int main
-	
 	write5
-
 	int fib5 = fib(5)
 	print fib5
 

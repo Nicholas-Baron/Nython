@@ -23,6 +23,7 @@ std::vector<std::string> fileContents(const std::string& location) {
 	return toRet;
 }
 
+//Breaks the string into its tokens
 std::vector<Token*> tokens(std::vector<std::string> program) {
 	std::vector<Token*> toRet;
 	
@@ -64,10 +65,11 @@ std::vector<Token*> tokens(std::vector<std::string> program) {
 	return toRet;
 }
 
+//Adds a space before and after operators
 std::string spaceDelimsOps(const std::string& line) {
 
 	std::string toRet;
-	//1 char
+	
 	for(unsigned i = 0; i < line.length(); i++) {
 		std::string poss_str = std::string(1, line[i]);
 		std::string next_str = std::string(1, line[i + 1]);
@@ -89,6 +91,7 @@ std::string spaceDelimsOps(const std::string& line) {
 	return toRet;
 }
 
+//Splits a string at each delimitor
 std::vector<std::string> split(const std::string& str, const std::string& delim) {
 	std::vector<std::string> tokens;
 	size_t prev = 0, pos = 0;

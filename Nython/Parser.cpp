@@ -25,6 +25,7 @@ void Parser::readNode(Node* root, int depth) {
 	}
 }
 
+//Finds the closing parenthesis
 Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end) {
 	Token* toRet = NULL;
 	end = start + 1;
@@ -38,6 +39,7 @@ Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end) {
 	return toRet;
 }
 
+//Finds the end of a repeat statement
 Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 	Token* toRet = NULL;
 	end = start + 1;
@@ -51,6 +53,7 @@ Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 	return toRet;
 }
 
+//Finds the end of an if statement
 Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
 	Token* toRet = NULL;
 	end = start + 1;
@@ -95,6 +98,7 @@ void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 	}
 }
 
+//Used for command and method parameters
 void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 
 	unsigned finish = pos + 1;
@@ -177,6 +181,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 	}
 }
 
+//Reads a sequence of tokens for loops or if-statements
 void parseSequence(TOKEN_LIST, Node* addTo, unsigned start, unsigned end) {
 
 	for(unsigned i = start; i < end; i++) {
@@ -184,6 +189,7 @@ void parseSequence(TOKEN_LIST, Node* addTo, unsigned start, unsigned end) {
 	}
 }
 
+//Identifier is either a variable name or method name
 void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 
 	auto prev = tokenList[pos - 1];
@@ -203,6 +209,7 @@ void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 	}
 }
 
+//Parses a single token
 Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast) {
 	
 	Node* toRet = NULL;

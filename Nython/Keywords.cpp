@@ -7,11 +7,6 @@ std::vector<std::string>	Keywords::delineators = {"(",")","|"};
 std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif"};
 std::vector<std::string>	Keywords::types = {"int","void","float","string","char"};
 
-bool Keywords::isBinaryOp(const Token & tok) {
-	auto txt = tok.text;
-	return (txt != "++") && (txt != "--");
-}
-
 TokenType Keywords::getTokenType(const std::string & text) {
 
 	const auto first_space = text.find_first_of(" ");
@@ -35,7 +30,7 @@ TokenType Keywords::getTokenType(const std::string & text) {
 
 	return type;
 }
-/* you might want to add char to getVarType*/
+
 VariableType Keywords::getVarType(const Token & tok) {
 	
 	if(tok.type != TokenType::TYPE) {
@@ -46,6 +41,8 @@ VariableType Keywords::getVarType(const Token & tok) {
 		return STRING;
 	} else if(tok.text == "float") {
 		return FLOAT;
+	} else if(tok.text == "char") {
+		return CHAR;
 	} else {
 		return VOID;
 	}

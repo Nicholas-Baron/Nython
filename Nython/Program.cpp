@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+//Finds a function definition (returns some negative number)
 int Program::getFuncDef (const std::string& name) {
 
 	int start = -1 * lines.size();
@@ -24,6 +25,7 @@ int Program::getFuncDef (const std::string& name) {
 	return start;
 }
 
+//Creates a variable
 void Program::allocVariable (Node * assign) { 
 
 	if(variableExists(assign->children[0]->token, false)) {
@@ -64,6 +66,7 @@ bool Program::variableExists(Token* id, bool printError) const {
 	return true;
 }
 
+//Gets a pointer to the data (do your own C-style casting)
 void * Program::getValue(Token* id, const VariableType& expectedType) {
 	if(!variableExists(id)) {
 		return nullptr;
@@ -88,54 +91,55 @@ void * Program::getValue(Token* id, const VariableType& expectedType) {
 			return NULL;
 	}
 }
-/*two levels of pointers probally should improve/find another way*/
+
 bool Program::testVariable(Node * test) {
-	auto txt = test->token->text;
-	auto left = test->children[0];
-	auto right = test->children[1];
+	
+	auto left = test->children[0]->token;
+	auto right = test->children[1]->token;
 	
 	auto leftType = VariableType::VOID;
-	if (left->token->type == TokenType::IDENTIFIER) {
-		if(variableExists(left->token)) {
-			leftType = varTyping[left->token->text];
+	if (left->type == TokenType::IDENTIFIER) {
+		if(variableExists(left)) {
+			leftType = varTyping[left->text];
 		} 
 	}
 	
 	auto rightType = VariableType::VOID;
-	if (right->token->type == TokenType::IDENTIFIER) {
-		if(variableExists(right->token)) {
-			rightType = varTyping[right->token->text];
+	if (right->type == TokenType::IDENTIFIER) {
+		if(variableExists(right)) {
+			rightType = varTyping[right->text];
 		} 
 	}
-
+	
+	auto txt = test->token->text;
 	if (leftType == VariableType::FLOAT || rightType == VariableType::FLOAT) { 
 		float l, r;
-		if (left->token->type == TokenType::IDENTIFIER) {
-			l = *(float*)getValue (left->token, leftType);
-		} else if (left->token->type == TokenType::LITERAL) {
-			l = stof (left->token->text);
+		if (left->type == TokenType::IDENTIFIER) {
+			l = *(float*)getValue (left, leftType);
+		} else if (left->type == TokenType::LITERAL) {
+			l = stof (left->text);
 		}
 
-		if (right->token->type == TokenType::IDENTIFIER) {
-			r = *(float*) getValue (right->token, leftType);
-		} else if (right->token->type == TokenType::LITERAL) {
-			r = stof (right->token->text);
+		if (right->type == TokenType::IDENTIFIER) {
+			r = *(float*) getValue (right, leftType);
+		} else if (right->type == TokenType::LITERAL) {
+			r = stof (right->text);
 		}
 
 		return Keywords::opProcess (txt, l, r);
 
 	} else if (leftType == VariableType::INT || rightType == VariableType::INT) {
 		int l, r;
-		if (left->token->type == TokenType::IDENTIFIER) {
-			l = *(int*) getValue (left->token, leftType);
-		} else if (left->token->type == TokenType::LITERAL) {
-			l = stoi (left->token->text);
+		if (left->type == TokenType::IDENTIFIER) {
+			l = *(int*) getValue (left, leftType);
+		} else if (left->type == TokenType::LITERAL) {
+			l = stoi (left->text);
 		}
 
-		if (right->token->type == TokenType::IDENTIFIER) {
-			r = *(int*) getValue (right->token, leftType);
-		} else if (right->token->type == TokenType::LITERAL) {
-			r = stoi (right->token->text);
+		if (right->type == TokenType::IDENTIFIER) {
+			r = *(int*) getValue (right, leftType);
+		} else if (right->type == TokenType::LITERAL) {
+			r = stoi (right->text);
 		}
 
 		return Keywords::opProcess (txt, l, r);
@@ -161,12 +165,11 @@ void Program::removeVar (Token * id) {
 	}
 }
 
-
+//Runs a function
 void Program::run (const std::string& func) {
 
 	currentLine = getFuncDef (func) + 1;
 	
-
 	while (!finished) {
 		auto line = lines[currentLine];
 		auto tokType = line->token->type;

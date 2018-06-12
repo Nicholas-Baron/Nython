@@ -11,13 +11,13 @@ the design patters in this code that the enterprise lecture talked about good st
 #define PRINT_PARSE_TREE 1
 #define RUN_INTERPRETER 1
 
+//Ensure a valid user inputted location
 std::string getFileLocation () {
 	
 	std::string fileLoc;
 	std::cout << "Enter a file to load: ";
 	std::cin >> fileLoc;
 	
-	//Ensure valid location
 	while (!isValidFile (fileLoc)) {
 		std::cout << "Invalid file " << fileLoc << std::endl;
 		std::cout << "Enter a different file location: ";
@@ -27,6 +27,7 @@ std::string getFileLocation () {
 	return fileLoc;
 }
 
+//Gets the file from the user
 void runInterpreter() {
 	auto fileLoc = getFileLocation();
 	auto content = fileContents(fileLoc);
@@ -38,7 +39,7 @@ void runInterpreter() {
 		std::cout << *tokenList[i] << std::endl;
 	}
 	std::cout << std::endl;
-#endif // PRINT_TOKEN_LIST
+#endif
 
 #if PRINT_PARSE_TREE
 	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
@@ -46,7 +47,7 @@ void runInterpreter() {
 		std::cout << " Line #" << i << std::endl;
 	}
 	std::cout << std::endl;
-#endif // PRINT_PARSE_TREE
+#endif
 
 #if RUN_INTERPRETER
 	Program prog(parseTree);
@@ -60,6 +61,7 @@ int main() {
 	unsigned option;
 
 	do {
+		//Main menu
 		std::cout << "Nython v1.0a" << std::endl;
 		std::cout << "0. Exit" << std::endl;
 		std::cout << "1. Reserved Word List" << std::endl;
