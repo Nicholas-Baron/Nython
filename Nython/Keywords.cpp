@@ -35,7 +35,7 @@ TokenType Keywords::getTokenType(const std::string & text) {
 
 	return type;
 }
-
+/* you might want to add char to getVarType*/
 VariableType Keywords::getVarType(const Token & tok) {
 	
 	if(tok.type != TokenType::TYPE) {

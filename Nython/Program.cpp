@@ -88,7 +88,7 @@ void * Program::getValue(Token* id, const VariableType& expectedType) {
 			return NULL;
 	}
 }
-
+/*two levels of pointers probally should improve/find another way*/
 bool Program::testVariable(Node * test) {
 	auto txt = test->token->text;
 	auto left = test->children[0];
