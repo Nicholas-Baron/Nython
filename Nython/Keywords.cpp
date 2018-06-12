@@ -2,14 +2,14 @@
 
 #include <cctype>
 
-std::vector<std::string>	Keywords::operators = {"=","<","++","->"};
+std::vector<std::string>	Keywords::operators = {"=","==","<",">","++","--","->"};
 std::vector<std::string>	Keywords::delineators = {"(",")","|"};
 std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif"};
 std::vector<std::string>	Keywords::types = {"int","void","float","string","char"};
 
 bool Keywords::isBinaryOp(const Token & tok) {
 	auto txt = tok.text;
-	return (txt == "=") || (txt == "<") || (txt == "->");
+	return (txt != "++") && (txt != "--");
 }
 
 TokenType Keywords::getTokenType(const std::string & text) {
@@ -29,7 +29,7 @@ TokenType Keywords::getTokenType(const std::string & text) {
 		type = TokenType::COMMAND;
 	} else if(contains(types, text)) {
 		type = TokenType::TYPE;
-	} else if(text.find_first_of("\"") == 0 || isdigit(text[0])) {
+	} else if(text.find_first_of("\"") == 0  || text.find_first_of("\'") == 0 || isdigit(text[0])) {
 		type = TokenType::LITERAL;
 	}
 
@@ -75,11 +75,11 @@ std::ostream & operator<<(std::ostream & lhs, const TokenType & rhs) {
 std::ostream & operator<<(std::ostream & lhs, const VariableType & rhs) {
 	switch (rhs) {
 		case VariableType::CHAR: lhs << "CHAR"; break;
-		case VariableType::FLOAT:lhs << "FLOAT"; break;
-		case VariableType::INT:lhs << "INT"; break;
-		case VariableType::STRING:lhs << "STRING"; break;
-		case VariableType::VOID:lhs << "VOID"; break;
-		default:lhs << "UNDEFINED";
+		case VariableType::FLOAT: lhs << "FLOAT"; break;
+		case VariableType::INT: lhs << "INT"; break;
+		case VariableType::STRING: lhs << "STRING"; break;
+		case VariableType::VOID: lhs << "VOID"; break;
+		default: lhs << "UNDEFINED";
 	}
 	return lhs;
 }
@@ -90,5 +90,5 @@ std::ostream & operator<<(std::ostream & lhs, const Token& rhs) {
 }
 
 bool operator==(const Token & lhs, const Token & rhs) {
-	return lhs.line_number == rhs.line_number && lhs.type == rhs.type&&lhs.text == rhs.text;
+	return lhs.line_number == rhs.line_number && lhs.type == rhs.type && lhs.text == rhs.text;
 }
