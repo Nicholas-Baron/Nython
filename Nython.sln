@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PrintConsole", "PrintConsole\PrintConsole.vcxproj", "{3E830C9D-582B-4583-AAA0-E8119EA354FE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Nython", "Nython\PrintConsole.vcxproj", "{3E830C9D-582B-4583-AAA0-E8119EA354FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

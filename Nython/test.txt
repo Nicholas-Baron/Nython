@@ -1,6 +1,6 @@
 void write5
-	repeat(int _i = 0|_i < 5|_i++)
-		print _i
+	repeat(int i = 0|i < 5|i++)
+		print i
 		endline
 	loop
 ret //End write5
