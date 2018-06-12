@@ -32,8 +32,13 @@ public:
 	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
 	static bool isBinaryOp(const Token& tok);
 	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "repeat"; }
+	inline static bool isConditionalStart(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "if" || tok.text == "elif"); }
 	inline static bool isSecondOfPairLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
-	inline static bool needsParameter(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "print"; }
+	inline static bool isEndOfConditional(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "elif" || tok.text == "else"); }
+	inline static bool needsParameter(const Token& tok) { 
+		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif"); 
+	}
+	inline static bool isAssignment(const Token& tok) { return tok.type == TokenType::OPERATOR && isBinaryOp(tok) && tok.text == "="; }
 	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "ret" || tok.text == "return"); }
 
 	static TokenType getTokenType(const std::string& text);
@@ -53,6 +58,10 @@ inline bool Keywords::opProcess (const std::string & op, T left, U right) {
 		return left == right;
 	} else if(op == ">"){
 		return left > right;
+	} else if(op == ">=") {
+		return left >= right;
+	} else if(op == "<=") {
+		return left <= right;
 	}
 	return false;
 }

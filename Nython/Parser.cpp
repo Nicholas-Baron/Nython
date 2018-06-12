@@ -2,8 +2,8 @@
 
 void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos);
 void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next);
-void parseLoop(TOKEN_LIST, Node* addTo, unsigned start, unsigned end);
-void parseIdentifier(TOKEN_LIST, Node* id, unsigned pos);
+void parseSequence(TOKEN_LIST, Node* addTo, unsigned start, unsigned end);
+void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next);
 Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast);
 
 Node* createNode(Token* t) { 
@@ -38,7 +38,7 @@ Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end) {
 	return toRet;
 }
 
-Token* otherEndOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
+Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 	Token* toRet = NULL;
 	end = start + 1;
 
@@ -51,20 +51,45 @@ Token* otherEndOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 	return toRet;
 }
 
+Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
+	Token* toRet = NULL;
+	end = start + 1;
+
+	while(toRet == NULL) {
+		if(Keywords::isEndOfConditional(*tokenList[end])) {
+			toRet = tokenList[end];
+		} else { end++; }
+	}
+
+	return toRet;
+}
+
 void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 	auto isBin = Keywords::isBinaryOp(*tokenList[pos]);
 	auto prevNode = createNode(tokenList[pos - 1]);
-	if(isBin) {	
+	if(isBin) {
 		auto nextNode = createNode(tokenList[pos + 1]);
 
-		if(tokenList[pos-2]->type == TokenType::TYPE) {
+		if(tokenList[pos - 2]->type == TokenType::TYPE && Keywords::isAssignment(*(addTo->token))) {
 			auto type = createNode(tokenList[pos - 2]);
 			prevNode->children.push_back(type);
 		}
 
+		if(Keywords::isFirstOfPairDelin(*(tokenList[pos + 2])) && Keywords::isAssignment(*(addTo->token))) {
+			unsigned nxtPos = pos + 1;
+			auto id = createNode(tokenList[nxtPos]);
+			pos++;
+			parseIdentifier(tokenList, id, pos, tokenList[nxtPos]);
+			addTo->children.push_back(id);
+		}
+
 		addTo->children.push_back(prevNode);
 		addTo->children.push_back(nextNode);
-		pos++;
+		if(nextNode->children.size() > 1) {
+			pos += nextNode->children.size();
+		} else {
+			pos++;
+		}
 	} else {
 		addTo->children.push_back(prevNode);
 	}
@@ -92,7 +117,7 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 			delin->children.push_back(op);
 		} else if(t->type == TokenType::IDENTIFIER){
 			Node* id = createNode(t);
-			parseIdentifier(tokenList, id, i);
+			parseIdentifier(tokenList, id, i, tokenList[i+1]);
 			delin->children.push_back(id);
 		}
 	}
@@ -119,16 +144,24 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 		pos = endOfPair;
 
 		if(Keywords::isLoopStart(*(comm->token))) {
-			unsigned endOfLoop = pos;
-			Token* endLoop = otherEndOfLoop(tokenList, endOfPair, endOfLoop);
+			unsigned endLoopPos = pos;
+			Token* endLoop = endOfLoop(tokenList, endOfPair, endLoopPos);
 
-			parseLoop(tokenList, delinEnd, endOfPair + 1, endOfLoop);
+			parseSequence(tokenList, delinEnd, endOfPair + 1, endLoopPos);
 
 			Node* loopEnd = createNode(endLoop);
 			delinEnd->children.push_back(loopEnd);
 
-			pos = endOfLoop;
+			pos = endLoopPos;
+		} else if(Keywords::isConditionalStart(*(comm->token))) {
+			unsigned endIfPos = pos;
+			endOfIf(tokenList, endOfPair, endIfPos);
+
+			parseSequence(tokenList, delinEnd, endOfPair + 1, endIfPos);
+
+			pos = endIfPos - 1;
 		}
+
 	} else {
 	
 		if(Keywords::needsParameter(*(comm->token))) {
@@ -144,20 +177,29 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 	}
 }
 
-void parseLoop(TOKEN_LIST, Node* addTo, unsigned start, unsigned end) {
+void parseSequence(TOKEN_LIST, Node* addTo, unsigned start, unsigned end) {
 
 	for(unsigned i = start; i < end; i++) {
 		addTo->children.push_back(parseToken(tokenList, tokenList[i],i,tokenList[i+1],i+1 == end));
 	}
 }
 
-void parseIdentifier(TOKEN_LIST, Node* id, unsigned pos) {
+void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 
 	auto prev = tokenList[pos - 1];
 
 	if(prev->type==TokenType::TYPE) {
 		auto prevNode = createNode(prev);
 		id->children.push_back(prevNode);
+	}
+
+	if(next->type==TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(*next)) {
+		unsigned endOfPair = pos;
+		otherEndOfPair(tokenList, pos, endOfPair);
+		for(unsigned i = pos + 1; i < endOfPair; i++) {
+			id->children.push_back(parseToken(tokenList, tokenList[i], i, tokenList[i + 1], i + 1 == endOfPair));
+		}
+		pos = endOfPair;
 	}
 }
 
@@ -176,7 +218,7 @@ Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast) 
 
 	} else if(t->type == TokenType::IDENTIFIER) {
 		toRet = createNode(t);
-		parseIdentifier(tokenList, toRet, pos);
+		parseIdentifier(tokenList, toRet, pos, next);
 	}
 
 	return toRet;

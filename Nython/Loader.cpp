@@ -66,33 +66,23 @@ std::vector<Token*> tokens(std::vector<std::string> program) {
 
 std::string spaceDelimsOps(const std::string& line) {
 
-	std::string first_pass;
+	std::string toRet;
 	//1 char
 	for(unsigned i = 0; i < line.length(); i++) {
 		std::string poss_str = std::string(1, line[i]);
+		std::string next_str = std::string(1, line[i + 1]);
 
-		if(Keywords::isDelineator(poss_str)) {
-			first_pass.append(" " + poss_str + " ");
-		} else if (Keywords::isOperator(poss_str)) {
-			first_pass.append(" " + poss_str + " ");
-		} else { 
-			first_pass.append(poss_str); 
-		}
-	}
-
-	std::string toRet;
-	//2 char
-	for(unsigned i = 0; i < first_pass.length(); i++) {
-		std::string poss_str = first_pass.substr(i, 2);
-		//Skip 1 char if you find a 2-char operator
 		if(Keywords::isDelineator(poss_str)) {
 			toRet.append(" " + poss_str + " ");
-			i++;
 		} else if(Keywords::isOperator(poss_str)) {
-			toRet.append(" " + poss_str + " ");
-			i++;
+			toRet.append(" " + poss_str);
+			if(Keywords::isOperator(next_str)) {
+				toRet.append(next_str); 
+				i++;
+			}
+			toRet.append(" ");
 		} else {
-			toRet.append(std::string(1, first_pass[i]));
+			toRet.append(poss_str);
 		}
 	}
 

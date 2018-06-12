@@ -5,7 +5,9 @@
 #include <iostream>
 #include <string>
 
-#define PRINT_PARSE_TREE 0
+#define PRINT_TOKEN_LIST 0
+#define PRINT_PARSE_TREE 1
+#define RUN_INTERPRETER 1
 
 std::string getFileLocation () {
 	
@@ -28,16 +30,27 @@ void runInterpreter() {
 	auto content = fileContents(fileLoc);
 	auto tokenList = tokens(content);
 	auto parseTree = Parser(tokenList);
-	if(PRINT_PARSE_TREE) {
-		for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
-			Parser::readNode(parseTree.parsedTokens()[i]);
-			std::cout << " Line #" << i << std::endl;
-		}
+
+#if PRINT_TOKEN_LIST
+	for(unsigned i = 0; i < tokenList.size(); i++) {
+		std::cout << *tokenList[i] << std::endl;
 	}
 	std::cout << std::endl;
+#endif // PRINT_TOKEN_LIST
+
+#if PRINT_PARSE_TREE
+	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
+		Parser::readNode(parseTree.parsedTokens()[i]);
+		std::cout << " Line #" << i << std::endl;
+	}
+	std::cout << std::endl;
+#endif // PRINT_PARSE_TREE
+
+#if RUN_INTERPRETER
 	Program prog(parseTree);
 	prog.run("main");
 	std::cout << std::endl;
+#endif
 }
 
 int main() {
