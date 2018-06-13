@@ -5,8 +5,10 @@
 #include <iostream>
 #include <string>
 
-/*Maybe add some documentation so other people(me included) can understand what each function does. Great code btw, I see alot of 
-the design patters in this code that the enterprise lecture talked about good stuff.*/
+/*
+Maybe add some documentation so other people can understand what each function does. 
+Great code btw, I see alot of the design patterns in this code that the enterprise lecture talked about, good stuff.
+*/
 #define PRINT_TOKEN_LIST 0
 #define PRINT_PARSE_TREE 1
 #define RUN_INTERPRETER 1
@@ -32,14 +34,15 @@ void runInterpreter() {
 	auto fileLoc = getFileLocation();
 	auto content = fileContents(fileLoc);
 	auto tokenList = tokens(content);
-	auto parseTree = Parser(tokenList);
-
+	
 #if PRINT_TOKEN_LIST
 	for(unsigned i = 0; i < tokenList.size(); i++) {
 		std::cout << *tokenList[i] << std::endl;
 	}
 	std::cout << std::endl;
 #endif
+
+	auto parseTree = Parser(tokenList);
 
 #if PRINT_PARSE_TREE
 	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {

@@ -30,13 +30,14 @@ public:
 	inline static bool isOperator(const std::string& item) { return contains(operators, item); }
 	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == "("; }
 	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
+	inline static bool nonPairedDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && !isFirstOfPairDelin(tok) && !isSecondOfPairDelin(tok); }
 	inline static bool isBinaryOp(const Token& tok) { return isOperator(tok.text) && tok.text != "++"&&tok.text != "--"; }
 	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "repeat"; }
 	inline static bool isConditionalStart(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "if" || tok.text == "elif"); }
 	inline static bool isSecondOfPairLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
 	inline static bool isEndOfConditional(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "elif" || tok.text == "else"); }
 	inline static bool needsParameter(const Token& tok) { 
-		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif"); 
+		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif" || tok.text == "else"); 
 	}
 	inline static bool isAssignment(const Token& tok) { return tok.type == TokenType::OPERATOR && isBinaryOp(tok) && tok.text == "="; }
 	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "ret" || tok.text == "return"); }
