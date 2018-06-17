@@ -5,14 +5,12 @@ void write5
 	loop
 ret //End write5
 
-int fib(int n)
+int fib(int n)	
 	if(n==0) ret 0
 	elif(n<=2) ret 1
-	
 	else ret fib(n-1) + fib(n-2)
 
 int main
 	write5
-	int fib5 = fib(5)
-	print fib5
+	print fib(6)
 ret 0

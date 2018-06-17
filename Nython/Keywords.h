@@ -7,7 +7,7 @@
 #include <string>
 
 enum TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
-enum VariableType {VOID, INT, STRING, FLOAT, CHAR};
+enum VariableType {VOID, INT, STRING, FLOAT, CHAR, BOOL};
 
 std::ostream& operator<<(std::ostream& lhs, const TokenType& rhs);
 std::ostream& operator<<(std::ostream& lhs, const VariableType& rhs);
@@ -31,16 +31,21 @@ public:
 	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == "("; }
 	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
 	inline static bool nonPairedDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && !isFirstOfPairDelin(tok) && !isSecondOfPairDelin(tok); }
-	inline static bool isBinaryOp(const Token& tok) { return isOperator(tok.text) && tok.text != "++"&&tok.text != "--"; }
+	inline static bool isBinaryOp(const Token& tok) { return isOperator(tok.text) && tok.text != "++" && tok.text != "--"; }
 	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "repeat"; }
 	inline static bool isConditionalStart(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "if" || tok.text == "elif"); }
-	inline static bool isSecondOfPairLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
+	inline static bool isEndOfLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
 	inline static bool isEndOfConditional(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "elif" || tok.text == "else"); }
 	inline static bool needsParameter(const Token& tok) { 
 		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif" || tok.text == "else"); 
 	}
+	inline static bool isBoolOp(const Token& tok) { 
+		return isOperator(tok.text) && (tok.text[0] == '<' || tok.text[0] == '>' || tok.text[0] == '!'); 
+	}
 	inline static bool isAssignment(const Token& tok) { return tok.type == TokenType::OPERATOR && isBinaryOp(tok) && tok.text == "="; }
 	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "ret" || tok.text == "return"); }
+	//Returns the optimal type for a variable
+	static VariableType bestFit(const Token& tok);
 
 	static TokenType getTokenType(const std::string& text);
 	static VariableType getVarType(const Token& tok);
@@ -48,11 +53,13 @@ public:
 	static void printKeywords();
 
 	template<class T, class U>
-	static bool opProcess (const std::string& op, T left, U right);
+	static bool opTest (const std::string& op, T left, U right);
+	template<class T, class U>
+	static T opMath(const std::string& op, T left, U right);
 };
 
 template<class T, class U>
-inline bool Keywords::opProcess (const std::string & op, T left, U right) {
+inline bool Keywords::opTest (const std::string & op, T left, U right) {
 	if (op == "<") {
 		return left < right;
 	} else if (op == "==") {
@@ -65,6 +72,15 @@ inline bool Keywords::opProcess (const std::string & op, T left, U right) {
 		return left <= right;
 	}
 	return false;
+}
+
+template<class T, class U>
+inline T Keywords::opMath(const std::string & op, T left, U right) {
+	if(op == "+") {
+		return left + right;
+	} else if(op == "-") {
+		return left - right;
+	}
 }
 
 #endif // !_KEYWORDS

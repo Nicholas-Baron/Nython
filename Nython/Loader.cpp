@@ -24,7 +24,7 @@ std::vector<std::string> fileContents(const std::string& location) {
 }
 
 //Breaks the string into its tokens
-std::vector<Token*> tokens(std::vector<std::string> program) {
+std::vector<Token*> tokens(const std::vector<std::string>& program) {
 	std::vector<Token*> toRet;
 	
 	for(unsigned line = 0; line < program.size(); line++) {

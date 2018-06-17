@@ -27,7 +27,7 @@ unsigned nextOfType(TOKEN_LIST, unsigned start, TokenType type, bool walkBackwar
 				depth++;
 			} else if(Keywords::isFirstOfPairDelin(*current)) { depth--; }
 
-		} while(current->type != type || depth != 0);
+		} while((current->type != type || depth != 0) && toRet > 0);
 	} else {
 		do {
 			toRet++; 
@@ -35,7 +35,7 @@ unsigned nextOfType(TOKEN_LIST, unsigned start, TokenType type, bool walkBackwar
 			if(Keywords::isSecondOfPairDelin(*current)) {
 				depth--;
 			} else if(Keywords::isFirstOfPairDelin(*current)) { depth++; }
-		} while(current->type != type || depth != 0);
+		} while((current->type != type || depth != 0) && toRet < tokenList.size() - 1);
 	}
 	return toRet;
 }
@@ -93,7 +93,7 @@ Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 	end = start + 1;
 
 	while(toRet == NULL) {
-		if(Keywords::isSecondOfPairLoop(*tokenList[end])) {
+		if(Keywords::isEndOfLoop(*tokenList[end])) {
 			toRet = tokenList[end];
 		} else { end++; }
 	}
@@ -173,6 +173,9 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 			Node* id = createNode(t);
 			parseIdentifier(tokenList, id, i, tokenList[i+1]);
 			delin->children.push_back(id);
+		} else if(t->type == LITERAL) {
+			Node* id = createNode(t);
+			delin->children.push_back(id);
 		}
 	}
 }
@@ -196,7 +199,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 			if(Keywords::isFirstOfPairDelin(*current)) {
 				depth++;
-				std::cout << "Depth change " << depth << " Line #" << current->line_number << std::endl;
+				//std::cout << "Depth change " << depth << " Line #" << current->line_number << std::endl;
 			} else if(Keywords::isSecondOfPairDelin(*current)) {
 				depth--;
 			}

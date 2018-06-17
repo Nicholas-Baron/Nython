@@ -5,7 +5,35 @@
 std::vector<std::string>	Keywords::operators = {"=","==","<","<=",">",">=","++","--","->", "-", "+"};
 std::vector<std::string>	Keywords::delineators = {"(",")","|"};
 std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif"};
-std::vector<std::string>	Keywords::types = {"int","void","float","string","char"};
+std::vector<std::string>	Keywords::types = {"int","void","float","string","char", "bool"};
+
+VariableType Keywords::bestFit(const Token & tok) {
+	bool canBeInt = true, canBeFloat = true;
+	for(unsigned i = 0; i < tok.text.length(); i++) {
+		if(!isdigit(tok.text[i])) {
+			canBeInt = false;
+			if(tok.text[i] != '.') {
+				canBeFloat = false;
+			}
+		}
+	}
+
+	if(canBeInt) {
+		return INT;
+	} else if(canBeFloat) {
+		return FLOAT;
+	}
+
+	if(tok.text == "true" || tok.text == "false") {
+		return BOOL;
+	}
+
+	if(tok.text.length() == 3) {
+		return CHAR;
+	}
+
+	return STRING;
+}
 
 TokenType Keywords::getTokenType(const std::string & text) {
 
@@ -76,6 +104,7 @@ std::ostream & operator<<(std::ostream & lhs, const VariableType & rhs) {
 		case VariableType::INT: lhs << "INT"; break;
 		case VariableType::STRING: lhs << "STRING"; break;
 		case VariableType::VOID: lhs << "VOID"; break;
+		case VariableType::BOOL: lhs << "BOOL"; break;
 		default: lhs << "UNDEFINED";
 	}
 	return lhs;

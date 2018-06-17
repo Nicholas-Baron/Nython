@@ -1,6 +1,7 @@
 #include "Loader.h"
 #include "Parser.h"
-#include "Program.h"
+#include "ActionTree.h"
+//#include "Program.h"
 
 #include <iostream>
 #include <string>
@@ -11,7 +12,8 @@ Great code btw, I see alot of the design patterns in this code that the enterpri
 */
 #define PRINT_TOKEN_LIST 0
 #define PRINT_PARSE_TREE 1
-#define RUN_INTERPRETER 1
+#define PRINT_ACTION_TREE 1
+#define RUN_INTERPRETER 0
 
 //Ensure a valid user inputted location
 std::string getFileLocation () {
@@ -51,10 +53,33 @@ void runInterpreter() {
 	}
 	std::cout << std::endl;
 #endif
+	
+	ActionTree actions;
+	actions.writeActionTree(parseTree.parsedTokens());
+
+#if PRINT_ACTION_TREE
+	for(unsigned i = 0; i < actions.actionList().size(); i++) {
+		if(actions.actionList()[i] != nullptr) actions.printActionTree(actions.actionList()[i]);
+		std::cout << " Action Set #" << i << std::endl;
+	}
+	std::cout << std::endl;
+#endif
 
 #if RUN_INTERPRETER
 	Program prog(parseTree);
-	prog.run("main");
+	auto ret = prog.run("main");
+	switch(ret.type) {
+		case INT:
+			std::cout << "Main returned " << *(static_cast<int*>(ret.data)) << std::endl;
+			break;
+		case STRING:
+			std::cout << "Main returned " << *(static_cast<std::string*>(ret.data)) << std::endl;
+			break;
+		case VOID:
+		default:
+			break;
+	}
+
 	std::cout << std::endl;
 #endif
 }
