@@ -129,12 +129,14 @@
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActionTree.h" />
     <ClInclude Include="Keywords.h" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Parser.h" />
+    <ClInclude Include="Program.h" />
     <ClInclude Include="VectorUtil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

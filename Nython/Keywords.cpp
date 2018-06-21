@@ -2,7 +2,7 @@
 
 #include <cctype>
 
-std::vector<std::string>	Keywords::operators = {"=","==","<","<=",">",">=","++","--","->", "-", "+"};
+std::vector<std::string>	Keywords::operators = {"=", "==", "<", "<=", ">", ">=", "++", "--", "->", "-", "+", "*", "**", "/", "%"};
 std::vector<std::string>	Keywords::delineators = {"(",")","|"};
 std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif"};
 std::vector<std::string>	Keywords::types = {"int","void","float","string","char", "bool"};
@@ -19,20 +19,20 @@ VariableType Keywords::bestFit(const Token & tok) {
 	}
 
 	if(canBeInt) {
-		return INT;
+		return VariableType::INT;
 	} else if(canBeFloat) {
-		return FLOAT;
+		return VariableType::FLOAT;
 	}
 
 	if(tok.text == "true" || tok.text == "false") {
-		return BOOL;
+		return VariableType::BOOL;
 	}
 
 	if(tok.text.length() == 3) {
-		return CHAR;
+		return VariableType::CHAR;
 	}
 
-	return STRING;
+	return VariableType::STRING;
 }
 
 TokenType Keywords::getTokenType(const std::string & text) {
@@ -62,17 +62,17 @@ TokenType Keywords::getTokenType(const std::string & text) {
 VariableType Keywords::getVarType(const Token & tok) {
 	
 	if(tok.type != TokenType::TYPE) {
-		return VOID;
+		return VariableType::VOID;
 	}else if(tok.text == "int") {
-		return INT;
+		return VariableType::INT;
 	}else if(tok.text == "string") {
-		return STRING;
+		return VariableType::STRING;
 	} else if(tok.text == "float") {
-		return FLOAT;
+		return VariableType::FLOAT;
 	} else if(tok.text == "char") {
-		return CHAR;
+		return VariableType::CHAR;
 	} else {
-		return VOID;
+		return VariableType::VOID;
 	}
 }
 

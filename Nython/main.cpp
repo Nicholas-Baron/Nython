@@ -1,7 +1,7 @@
 #include "Loader.h"
 #include "Parser.h"
 #include "ActionTree.h"
-//#include "Program.h"
+#include "Program.h"
 
 #include <iostream>
 #include <string>
@@ -11,7 +11,7 @@ Maybe add some documentation so other people can understand what each function d
 Great code btw, I see alot of the design patterns in this code that the enterprise lecture talked about, good stuff.
 */
 #define PRINT_TOKEN_LIST 0
-#define PRINT_PARSE_TREE 1
+#define PRINT_PARSE_TREE 0
 #define PRINT_ACTION_TREE 1
 #define RUN_INTERPRETER 0
 
@@ -59,14 +59,14 @@ void runInterpreter() {
 
 #if PRINT_ACTION_TREE
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
-		if(actions.actionList()[i] != nullptr) actions.printActionTree(actions.actionList()[i]);
-		std::cout << " Action Set #" << i << std::endl;
+		std::cout << "Action Set #" << i << std::endl;
+		actions.printActionTree(actions.actionList()[i]);
 	}
 	std::cout << std::endl;
 #endif
 
 #if RUN_INTERPRETER
-	Program prog(parseTree);
+	Program prog(actions.actionList());
 	auto ret = prog.run("main");
 	switch(ret.type) {
 		case INT:

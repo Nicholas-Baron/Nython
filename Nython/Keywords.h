@@ -6,8 +6,8 @@
 #include <vector>
 #include <string>
 
-enum TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
-enum VariableType {VOID, INT, STRING, FLOAT, CHAR, BOOL};
+enum class TokenType { IDENTIFIER, OPERATOR, DELINEATOR, COMMAND, TYPE, LITERAL };
+enum class VariableType {VOID, INT, STRING, FLOAT, CHAR, BOOL};
 
 std::ostream& operator<<(std::ostream& lhs, const TokenType& rhs);
 std::ostream& operator<<(std::ostream& lhs, const VariableType& rhs);
@@ -40,7 +40,7 @@ public:
 		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif" || tok.text == "else"); 
 	}
 	inline static bool isBoolOp(const Token& tok) { 
-		return isOperator(tok.text) && (tok.text[0] == '<' || tok.text[0] == '>' || tok.text[0] == '!'); 
+		return isOperator(tok.text) && (tok.text[0] == '<' || tok.text[0] == '>' || tok.text[0] == '!' || tok.text == "=="); 
 	}
 	inline static bool isAssignment(const Token& tok) { return tok.type == TokenType::OPERATOR && isBinaryOp(tok) && tok.text == "="; }
 	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "ret" || tok.text == "return"); }

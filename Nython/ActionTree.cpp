@@ -4,13 +4,13 @@
 #include <iomanip>
 
 Action* parseNode(Node* n, bool& finished);
-Action* parseCall(Node* line);
+Action* parseCall(Node* line, bool& finished);
 
 Action* parseCommand(Node* line, bool& finished) {
 	Action* current = new Action;
 	current->tok = line->token;
 	current->type = CALL;
-	current->result = VOID;
+	current->result = VariableType::VOID;
 	if(Keywords::isConditionalStart(*(line->token))) {
 		current->type = DECISION;
 		current->children.push_back(parseNode(line->children[0]->children[0], finished));
@@ -18,7 +18,7 @@ Action* parseCommand(Node* line, bool& finished) {
 		current->type = DECISION;
 		current->children.push_back(parseNode(line->children[0], finished));
 	} else if(line->token->text == "print"){
-		current->result = VOID;
+		current->result = VariableType::VOID;
 		current->children.push_back(parseNode(line->children[0], finished));
 	} else if(line->token->text == "repeat") {
 		current->children.push_back(parseNode(line->children[0]->children[0], finished));
@@ -64,10 +64,9 @@ Action* parseOperator(Node* line, bool& finished) {
 	}
 
 	if(Keywords::isBoolOp(*(line->token))) {
-		std::cout << line->token->text << " is a bool return" << std::endl;
-		current->result = BOOL;
+		current->result = VariableType::BOOL;
 	} else if(Keywords::isAssignment(*(line->token))) {
-		current->result = VOID;
+		current->result = VariableType::VOID;
 	} else {
 		current->result = current->children[0]->result;
 	}
@@ -89,17 +88,17 @@ Action* parseCall(Node* line, bool& finished) {
 Action* parseNode(Node* n, bool& finished){
 	Action* toRet = NULL;
 	const auto& lineType = n->token->type;
-	if(lineType == IDENTIFIER) {
-		if(n->children.size() == 0 || n->children[0]->token->type != TYPE) {
+	if(lineType == TokenType::IDENTIFIER) {
+		if(n->children.size() == 0 || n->children[0]->token->type != TokenType::TYPE) {
 			toRet = parseCall(n, finished);
 		} else {
 			toRet = parseDefinition(n, finished);
 		}
-	} else if(lineType == COMMAND) {
+	} else if(lineType == TokenType::COMMAND) {
 		toRet = parseCommand(n, finished);
-	} else if(lineType == OPERATOR) {
+	} else if(lineType == TokenType::OPERATOR) {
 		toRet = parseOperator(n, finished);
-	} else if(lineType == LITERAL) {
+	} else if(lineType == TokenType::LITERAL) {
 		toRet = new Action;
 		toRet->tok = n->token;
 		toRet->type = LITVAL;
@@ -123,10 +122,7 @@ Action* parseActionTree(std::vector<Node*> lines, unsigned& pos) {
 void ActionTree::writeActionTree(std::vector<Node*> parsed) {
 	
 	for(unsigned i = 0; i < parsed.size(); i++) {
-		
-		//std::cout << "At line " << i << std::endl;
-		Action* current = parseActionTree(parsed, i);
-		actions.push_back(current);
+		actions.push_back(parseActionTree(parsed, i));
 	}
 }
 

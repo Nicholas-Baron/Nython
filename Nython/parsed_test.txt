@@ -1,13 +1,58 @@
 [0]write5 [1]void  Line #0
 [0]repeat [1]( [2]= [3]i [4]int [3]0 [1]| [2]< [3]i [3]5 [1]| [2]++ [3]i [1]) [2]print [3]i [2]endline [2]loop  Line #1
 [0]ret  Line #2
-
 [0]fib [1]int [1]( [2]n [3]int  Line #3
 [0]if [1]( [2]== [3]n [3]0 [1]) [2]ret [3]0  Line #4
 [0]elif [1]( [2]<= [3]n [3]2 [1]) [2]ret [3]1  Line #5
 [0]else [1]ret [2]+ [3]fib [4]( [5]- [6]n [6]1 [3]fib [4]( [5]- [6]n [6]2  Line #6
-
 [0]main [1]int  Line #7
 [0]write5  Line #8
 [0]print [1]fib [2]( [3]6  Line #9
 [0]ret [1]0  Line #10
+
+Action Set #0
+ write5    DEFINITION          VOID      0
+ repeat          CALL          VOID      1
+      = OPERATOR CALL          VOID      2
+      i    DEFINITION           INT      3
+      0       LITERAL           INT      3
+      < OPERATOR CALL          BOOL      2
+      i          CALL     UNDEFINED      3
+      5       LITERAL           INT      3
+     ++ OPERATOR CALL     UNDEFINED      2
+      i          CALL     UNDEFINED      3
+  print          CALL          VOID      2
+      i          CALL     UNDEFINED      3
+endline          CALL          VOID      2
+   loop          CALL          VOID      2
+    ret          CALL          VOID      1
+Action Set #1
+    fib    DEFINITION           INT      0
+      n    DEFINITION           INT      1
+     if      DECISION          VOID      1
+     == OPERATOR CALL          BOOL      2
+      n          CALL     UNDEFINED      3
+      0       LITERAL           INT      3
+   elif      DECISION          VOID      1
+     <= OPERATOR CALL          BOOL      2
+      n          CALL     UNDEFINED      3
+      2       LITERAL           INT      3
+   else      DECISION          VOID      1
+    ret          CALL     UNDEFINED      2
+      + OPERATOR CALL     UNDEFINED      3
+    fib          CALL     UNDEFINED      4
+      - OPERATOR CALL     UNDEFINED      5
+      n          CALL     UNDEFINED      6
+      1       LITERAL           INT      6
+    fib          CALL     UNDEFINED      4
+      - OPERATOR CALL     UNDEFINED      5
+      n          CALL     UNDEFINED      6
+      2       LITERAL           INT      6
+Action Set #2
+   main    DEFINITION           INT      0
+ write5          CALL     UNDEFINED      1
+  print          CALL          VOID      1
+    fib          CALL     UNDEFINED      2
+      6       LITERAL           INT      3
+    ret          CALL           INT      1
+      0       LITERAL           INT      2

@@ -117,9 +117,9 @@ Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
 
 void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 	auto isBin = Keywords::isBinaryOp(*tokenList[pos]);
-	auto leftLoc = nextOfType(tokenList, pos, IDENTIFIER, true);
+	auto leftLoc = nextOfType(tokenList, pos, TokenType::IDENTIFIER, true);
 	
-	auto prevNode = !Keywords::isAssignment(*(addTo->token)) && tokenList[pos - 1]->type == DELINEATOR
+	auto prevNode = !Keywords::isAssignment(*(addTo->token)) && tokenList[pos - 1]->type == TokenType::DELINEATOR
 		?parseToken(tokenList, tokenList[leftLoc], leftLoc, tokenList[leftLoc + 1], false)
 		:createNode(tokenList[leftLoc]);
 	
@@ -173,7 +173,7 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 			Node* id = createNode(t);
 			parseIdentifier(tokenList, id, i, tokenList[i+1]);
 			delin->children.push_back(id);
-		} else if(t->type == LITERAL) {
+		} else if(t->type == TokenType::LITERAL) {
 			Node* id = createNode(t);
 			delin->children.push_back(id);
 		}
@@ -236,14 +236,14 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			Node* param = parseToken(tokenList, next, pos, tokenList[pos + 1], pos + 1 == tokenList.size());
 			comm->children.push_back(param);
 		} else if(Keywords::isFuncEnd(*(comm->token))) {
-			if(next->type == LITERAL) {
+			if(next->type == TokenType::LITERAL) {
 				Node* param = createNode(next);
 				comm->children.push_back(param);
 				pos++;
-			} else if(next->type == IDENTIFIER){
+			} else if(next->type == TokenType::IDENTIFIER){
 				pos++;
-				auto nextCmd = nextOfType(tokenList, pos, COMMAND);
-				auto nextType = nextOfType(tokenList, pos, TYPE);
+				auto nextCmd = nextOfType(tokenList, pos, TokenType::COMMAND);
+				auto nextType = nextOfType(tokenList, pos, TokenType::TYPE);
 
 				unsigned stop = std::min(nextCmd, nextType);
 				parseSequence(tokenList, comm, pos, stop);
@@ -255,7 +255,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 //Reads a sequence of tokens for loops, if-statements, or long returns
 void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end) {
-	auto nxtOp = nextOfType(tokenList, start, OPERATOR);
+	auto nxtOp = nextOfType(tokenList, start, TokenType::OPERATOR);
 	if(nxtOp < end) {
 		auto op = createNode(tokenList[nxtOp]);
 		parseOperator(tokenList, op, nxtOp);
