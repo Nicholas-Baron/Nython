@@ -12,7 +12,7 @@ std::vector<std::string> fileContents(const std::string& location);
 inline bool isValidFile(const std::string& location) {
 
 	std::ifstream file(location.c_str());
-	bool error = !file;
+	const auto error = !file;
 	file.close();
 	return !error;
 }
@@ -32,7 +32,7 @@ inline std::string trim(const std::string& str_in, const std::string& whitespace
 
 inline bool hasComment(const std::string& str_in) { return str_in.find_first_of("//") != std::string::npos; }
 
-std::vector<std::string> split(const std::string& str, const std::string& delim);
+std::vector<std::string> splitIntoTokens(const std::string& str, const std::string& delim);
 
 std::string spaceDelimsOps(const std::string& line);
 

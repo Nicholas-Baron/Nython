@@ -40,7 +40,7 @@ std::vector<Token*> tokens(const std::vector<std::string>& program) {
 		}
 		
 		if(!whole_line.empty() && !isComment) {
-			auto tokens = split(whole_line, " ");
+			auto tokens = splitIntoTokens(whole_line, " ");
 			
 			for(unsigned i = 0; i < tokens.size(); i++) {
 				
@@ -91,11 +91,12 @@ std::string spaceDelimsOps(const std::string& line) {
 	return toRet;
 }
 
-//Splits a string at each delimitor
-std::vector<std::string> split(const std::string& str, const std::string& delim) {
+//Splits a string at each delimiter
+std::vector<std::string> splitIntoTokens(const std::string& str, const std::string& delim) {
 	std::vector<std::string> tokens;
 	size_t prev = 0, pos = 0;
 	
+	//TODO: Support strings with spaces
 	do {
 		pos = str.find(delim, prev);
 		if(pos == std::string::npos) pos = str.length();
