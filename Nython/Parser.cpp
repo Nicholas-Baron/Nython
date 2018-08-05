@@ -184,15 +184,15 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(*next)) {
 
-		unsigned endOfPair = pos + 2;
-		Token* otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPair);
+		auto endOfPairPos = pos + 2;
+		auto otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPairPos);
 
 		int depth = 0;
-		for(unsigned j = pos + 1; j < endOfPair; j++) {
-			auto current = tokenList[j];
+		for(unsigned j = pos + 1; j < endOfPairPos; j++) {
+			const auto current = tokenList[j];
 			
 			if((current->type == TokenType::DELINEATOR && depth == 0)|| Keywords::nonPairedDelin(*current)) {
-				Node* delin = createNode(current);
+				const auto delin = createNode(current);
 				parseAfterDelineator(tokenList, delin, j);
 				comm->children.push_back(delin);
 			} 
@@ -208,7 +208,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 		Node* delinEnd = createNode(otherEnd);
 		comm->children.push_back(delinEnd);
 
-		pos = endOfPair;
+		pos = endOfPairPos;
 
 		if(Keywords::isLoopStart(*(comm->token))) {
 			unsigned endLoopPos = pos;
