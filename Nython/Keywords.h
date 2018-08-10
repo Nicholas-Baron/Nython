@@ -28,22 +28,31 @@ private:
 public:
 	inline static bool isDelineator(const std::string& item) { return contains(delineators, item); }
 	inline static bool isOperator(const std::string& item) { return contains(operators, item); }
-	inline static bool isFirstOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == "("; }
-	inline static bool isSecondOfPairDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && tok.text == ")"; }
-	inline static bool nonPairedDelin(const Token& tok) { return tok.type == TokenType::DELINEATOR && !isFirstOfPairDelin(tok) && !isSecondOfPairDelin(tok); }
-	inline static bool isBinaryOp(const Token& tok) { return isOperator(tok.text) && tok.text != "++" && tok.text != "--"; }
-	inline static bool isLoopStart(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "repeat"; }
-	inline static bool isConditionalStart(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "if" || tok.text == "elif"); }
+	inline static bool isCommand(const std::string& item) { return contains(commands, item); }
+
+	inline static bool isFirstOfPairDelin(const Token* tok) { return tok->type == TokenType::DELINEATOR && tok->text == "("; }
+	inline static bool isSecondOfPairDelin(const Token* tok) { return tok->type == TokenType::DELINEATOR && tok->text == ")"; }
+	inline static bool nonPairedDelin(const Token* tok) { return tok->type == TokenType::DELINEATOR && !isFirstOfPairDelin(tok) && !isSecondOfPairDelin(tok); }
+	
+	inline static bool isBinaryOp(const Token* tok) { return isOperator(tok->text) && tok->text != "++" && tok->text != "--" && tok->text != "!"; }
+	inline static bool isBoolOp(const Token* tok) {
+		return isOperator(tok->text) && (tok->text[0] == '<' || tok->text[0] == '>' || tok->text[0] == '!' || tok->text == "==");
+	}
+	inline static bool isAssignment(const Token* tok) { return tok->type == TokenType::OPERATOR && isBinaryOp(tok) && tok->text == "="; }
+	inline static bool isUnaryOp(const Token* tok) { return !isBinaryOp(tok) && isOperator(tok->text); }
+	inline static bool canUseIncre(const VariableType& type) { return type == VariableType::FLOAT || type == VariableType::INT; }
+
+	inline static bool isLoopStart(const Token* tok) { return tok->type == TokenType::COMMAND && tok->text == "repeat"; }
+	inline static bool isConditionalStart(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "if" || tok->text == "elif"); }
 	inline static bool isEndOfLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
-	inline static bool isEndOfConditional(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "elif" || tok.text == "else"); }
+	inline static bool isEndOfConditional(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "elif" || tok->text == "else" || tok->text == "endif"); }
 	inline static bool needsParameter(const Token& tok) { 
 		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif" || tok.text == "else"); 
 	}
-	inline static bool isBoolOp(const Token& tok) { 
-		return isOperator(tok.text) && (tok.text[0] == '<' || tok.text[0] == '>' || tok.text[0] == '!' || tok.text == "=="); 
-	}
-	inline static bool isAssignment(const Token& tok) { return tok.type == TokenType::OPERATOR && isBinaryOp(tok) && tok.text == "="; }
-	inline static bool isFuncEnd(const Token& tok) { return tok.type == TokenType::COMMAND && (tok.text == "ret" || tok.text == "return"); }
+	
+	static bool getBoolFromToken(const Token* tok);
+	
+	inline static bool isFuncEnd(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "ret" || tok->text == "return"); }
 	//Returns the optimal type for a variable
 	static VariableType bestFit(const Token& tok);
 
@@ -56,6 +65,8 @@ public:
 	static bool opTest (const std::string& op, T left, U right);
 	template<class T, class U>
 	static T opMath(const std::string& op, T left, U right);
+	template<class T>
+	static void opUnary(const std::string& op, T& var);
 };
 
 template<class T, class U>
@@ -80,7 +91,29 @@ inline T Keywords::opMath(const std::string & op, T left, U right) {
 		return left + right;
 	} else if(op == "-") {
 		return left - right;
+	} else if(op == "*") {
+		return left * right;
+	} else if(op == "/") {
+		return left / right;
 	}
+}
+
+template<class T>
+inline void Keywords::opUnary(const std::string & op, T& var) {
+	if(op == "++") {
+		var++;
+	}else if(op == "--") {
+		var--;
+	}else if(op == "!") {
+		var = !var;
+	}
+}
+
+template<>
+inline void Keywords::opUnary(const std::string & op, bool& var) {
+	if(op == "!") {
+		var = !var;
+	} 
 }
 
 #endif // !_KEYWORDS

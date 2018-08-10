@@ -10,10 +10,12 @@
 Maybe add some documentation so other people can understand what each function does. 
 Great code btw, I see alot of the design patterns in this code that the enterprise lecture talked about, good stuff.
 */
-#define PRINT_TOKEN_LIST 0
-#define PRINT_PARSE_TREE 0
-#define PRINT_ACTION_TREE 1
-#define RUN_INTERPRETER 0
+
+std::vector<std::string> loadedProgram;
+Parser parseTree;
+ActionTree actions;
+
+bool loaded = false;
 
 //Ensure a valid user inputted location
 std::string getFileLocation () {
@@ -31,57 +33,71 @@ std::string getFileLocation () {
 	return fileLoc;
 }
 
-//Gets the file from the user
-void runInterpreter() {
-	auto fileLoc = getFileLocation();
-	auto content = fileContents(fileLoc);
-	auto tokenList = tokens(content);
+inline void loadProgram() {
+	//Loads the file from a user-inputted location
+	loadedProgram = fileContents(getFileLocation());
+	parseTree = Parser(tokens(loadedProgram));
+	actions.writeActionTreeList(parseTree);
+	loaded = true;
+}
+
+void showTokens() {
 	
-#if PRINT_TOKEN_LIST
-	for(unsigned i = 0; i < tokenList.size(); i++) {
-		std::cout << *tokenList[i] << std::endl;
+	if(!loaded) {
+		loadProgram();
 	}
-	std::cout << std::endl;
-#endif
 
-	auto parseTree = Parser(tokenList);
+	for(Token* token : tokens(loadedProgram)) {
+		std::cout << *token << std::endl;
+	}
+}
 
-#if PRINT_PARSE_TREE
+void showParseTrees() {
+	
+	if(!loaded) {
+		loadProgram();
+	}
+	
 	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
 		Parser::readNode(parseTree.parsedTokens()[i]);
 		std::cout << " Line #" << i << std::endl;
 	}
 	std::cout << std::endl;
-#endif
-	
-	ActionTree actions;
-	actions.writeActionTree(parseTree.parsedTokens());
+}
 
-#if PRINT_ACTION_TREE
+void showActionTrees() {
+	
+	if(!loaded) {
+		loadProgram();
+	}
+
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
 		std::cout << "Action Set #" << i << std::endl;
 		actions.printActionTree(actions.actionList()[i]);
 	}
 	std::cout << std::endl;
-#endif
+}
 
-#if RUN_INTERPRETER
-	Program prog(actions.actionList());
-	auto ret = prog.run("main");
-	switch(ret.type) {
-		case INT:
-			std::cout << "Main returned " << *(static_cast<int*>(ret.data)) << std::endl;
-			break;
-		case STRING:
-			std::cout << "Main returned " << *(static_cast<std::string*>(ret.data)) << std::endl;
-			break;
-		case VOID:
-		default:
-			break;
+void runProgram() {
+	
+	if(!loaded) {
+		loadProgram();
 	}
 
 	std::cout << std::endl;
-#endif
+	Program prog(actions);
+	auto ret = prog.run("main");
+	switch(ret.type) {
+		case VariableType::INT:
+			std::cout << "Main returned " << *(static_cast<int*>(ret.location)) << std::endl;
+			break;
+		case VariableType::STRING:
+			std::cout << "Main returned " << *(static_cast<std::string*>(ret.location)) << std::endl;
+			break;
+		case VariableType::VOID:
+		default:
+			break;
+	}
 }
 
 int main() {
@@ -90,11 +106,15 @@ int main() {
 
 	do {
 		//Main menu
-		std::cout << "Nython v1.0a" << std::endl;
+		std::cout << "Nython v0.0.1a" << std::endl;
 		std::cout << "0. Exit" << std::endl;
 		std::cout << "1. Reserved Word List" << std::endl;
-		std::cout << "2. Run Interpreter" << std::endl;
-		std::cout << "3. [Construction Here]" << std::endl;
+		std::cout << "2. Load Program" << std::endl; 
+		std::cout << "3. Show Token List" << std::endl;
+		std::cout << "4. Show Parser Output" << std::endl;
+		std::cout << "5. Show Action Trees" << std::endl;
+		std::cout << "6. Run Program" << std::endl;
+		std::cout << "7. [Construction Here]" << std::endl;
 		
 		std::cout << "Select an option: ";
 		std::cin >> option;
@@ -104,7 +124,15 @@ int main() {
 			case 1:
 				Keywords::printKeywords(); break;
 			case 2:
-				runInterpreter(); break;
+				loadProgram(); break;
+			case 3:
+				showTokens(); break;
+			case 4:
+				showParseTrees(); break;
+			case 5:
+				showActionTrees(); break;
+			case 6: 
+				runProgram(); break;
 			default:
 				std::cout << "Invalid option" << std::endl; break;
 			case 0: break; //Jumps over everything
@@ -112,5 +140,5 @@ int main() {
 		std::cout << std::endl;
 	
 	} while(option != 0);
-	return 0;
+	return option;
 }

@@ -1,3 +1,12 @@
+Reserved Words:
+
+Operators: =, ==, <, <=, >, >=, ++, --, ->, -, +, *, **, /, %
+Delineators: (, ), |
+Commands: print, repeat, loop, ret, return, endline, if, else, elif
+Variable Types: int, void, float, string, char, bool
+
+Parse Tree:
+
 [0]write5 [1]void  Line #0
 [0]repeat [1]( [2]= [3]i [4]int [3]0 [1]| [2]< [3]i [3]5 [1]| [2]++ [3]i [1]) [2]print [3]i [2]endline [2]loop  Line #1
 [0]ret  Line #2
@@ -10,6 +19,8 @@
 [0]print [1]fib [2]( [3]6  Line #9
 [0]ret [1]0  Line #10
 
+Action Tree:
+
 Action Set #0
  write5    DEFINITION          VOID      0
  repeat          CALL          VOID      1
@@ -17,12 +28,12 @@ Action Set #0
       i    DEFINITION           INT      3
       0       LITERAL           INT      3
       < OPERATOR CALL          BOOL      2
-      i          CALL     UNDEFINED      3
+      i      VARIABLE           INT      3
       5       LITERAL           INT      3
-     ++ OPERATOR CALL     UNDEFINED      2
-      i          CALL     UNDEFINED      3
+     ++ OPERATOR CALL           INT      2
+      i      VARIABLE           INT      3
   print          CALL          VOID      2
-      i          CALL     UNDEFINED      3
+      i      VARIABLE           INT      3
 endline          CALL          VOID      2
    loop          CALL          VOID      2
     ret          CALL          VOID      1
@@ -31,28 +42,32 @@ Action Set #1
       n    DEFINITION           INT      1
      if      DECISION          VOID      1
      == OPERATOR CALL          BOOL      2
-      n          CALL     UNDEFINED      3
+      n      VARIABLE           INT      3
+      0       LITERAL           INT      3
+    ret          CALL           INT      2
       0       LITERAL           INT      3
    elif      DECISION          VOID      1
      <= OPERATOR CALL          BOOL      2
-      n          CALL     UNDEFINED      3
+      n      VARIABLE           INT      3
       2       LITERAL           INT      3
+    ret          CALL           INT      2
+      1       LITERAL           INT      3
    else      DECISION          VOID      1
-    ret          CALL     UNDEFINED      2
-      + OPERATOR CALL     UNDEFINED      3
-    fib          CALL     UNDEFINED      4
-      - OPERATOR CALL     UNDEFINED      5
-      n          CALL     UNDEFINED      6
+    ret          CALL           INT      2
+      + OPERATOR CALL           INT      3
+    fib          CALL           INT      4
+      - OPERATOR CALL           INT      5
+      n      VARIABLE           INT      6
       1       LITERAL           INT      6
-    fib          CALL     UNDEFINED      4
-      - OPERATOR CALL     UNDEFINED      5
-      n          CALL     UNDEFINED      6
+    fib          CALL           INT      4
+      - OPERATOR CALL           INT      5
+      n      VARIABLE           INT      6
       2       LITERAL           INT      6
 Action Set #2
    main    DEFINITION           INT      0
- write5          CALL     UNDEFINED      1
+ write5          CALL          VOID      1
   print          CALL          VOID      1
-    fib          CALL     UNDEFINED      2
+    fib          CALL           INT      2
       6       LITERAL           INT      3
     ret          CALL           INT      1
       0       LITERAL           INT      2

@@ -6,33 +6,40 @@
 Action* parseNode(Node* n, bool& finished, DefinitonList& definitions);
 Action* parseCall(Node* line, bool& finished, DefinitonList& defs);
 
+unsigned conditionalLvl = 0;
+
 Action* parseCommand(Node* line, bool& finished, DefinitonList& defs) {
 	Action* current = new Action;
 	current->tok = line->token;
 	current->type = CALL;
-	current->result = VariableType::VOID;
-	if(Keywords::isConditionalStart(*(line->token))) {
+	current->resultType = VariableType::VOID;
+	if(Keywords::isConditionalStart(line->token)) {
 		current->type = DECISION;
+		conditionalLvl++;
 		current->children.push_back(parseNode(line->children[0]->children[0], finished, defs));
-	} else if(line->token->text == "else") {
+		current->children.push_back(parseNode(line->children[1]->children[0], finished, defs));
+		conditionalLvl--;
+	} else if(Keywords::isEndOfConditional(line->token) && line->token->text != "endif") {
 		current->type = DECISION;
 		current->children.push_back(parseNode(line->children[0], finished, defs));
 	} else if(line->token->text == "print"){
-		current->result = VariableType::VOID;
+		current->resultType = VariableType::VOID;
 		current->children.push_back(parseNode(line->children[0], finished, defs));
-	} else if(line->token->text == "repeat") {
+	} else if(Keywords::isLoopStart(line->token)) {
 		current->children.push_back(parseNode(line->children[0]->children[0], finished, defs));
 		current->children.push_back(parseNode(line->children[1]->children[0], finished, defs));
 		current->children.push_back(parseNode(line->children[2]->children[0], finished, defs));
 		for(unsigned i = 0; i < line->children[3]->children.size(); i++) {
 			current->children.push_back(parseNode(line->children[3]->children[i], finished, defs));
 		}
-	} else if(Keywords::isFuncEnd(*(line->token))) {
+	} else if(Keywords::isFuncEnd(line->token)) {
 		if(line->children.size() > 0) {
 			current->children.push_back(parseNode(line->children[0], finished, defs));
-			current->result = current->children[0]->result;
+			current->resultType = current->children[0]->resultType;
 		}
-		finished = true;
+		if(conditionalLvl == 0) {
+			finished = true;
+		}
 	} else if(line->token->text == "endline") { //Left for potential further edits
 	} else if(Keywords::isEndOfLoop(*(line->token))) { //Left for potential further edits
 	} 
@@ -43,16 +50,19 @@ Action* parseCommand(Node* line, bool& finished, DefinitonList& defs) {
 Action* parseDefinition(Node* line, bool& finished, DefinitonList& defs) {
 	
 	Action* current = new Action;
-	current->result = Keywords::getVarType(*(line->children[0]->token));
+	current->resultType = Keywords::getVarType(*(line->children[0]->token));
 	current->tok = line->token;
 	current->type = DEFINITION;
-	if(line->children.size() >= 2) {
+	
+	const auto isFunction = line->children.size() >= 2 || current->resultType == VariableType::VOID;
+	if(isFunction) {
 		for(unsigned i = 1; i < line->children.size(); i++) {
 			current->children.push_back(parseNode(line->children[i]->children[0], finished, defs));
 		}
 	}
-	defs.push_back(std::make_pair(current->tok->text, current->result));
-
+	
+	defs.push_back(Definition{current->tok->text, current->resultType, isFunction});
+	
 	return current;
 }
 
@@ -61,16 +71,16 @@ Action* parseOperator(Node* line, bool& finished, DefinitonList& defs) {
 	current->tok = line->token;
 	current->type = OPCALL;
 	current->children.push_back(parseNode(line->children[0], finished, defs));
-	if(Keywords::isBinaryOp(*(line->token))) {
+	if(Keywords::isBinaryOp(line->token)) {
 		current->children.push_back(parseNode(line->children[1], finished, defs));
 	}
 
-	if(Keywords::isBoolOp(*(line->token))) {
-		current->result = VariableType::BOOL;
-	} else if(Keywords::isAssignment(*(line->token))) {
-		current->result = VariableType::VOID;
+	if(Keywords::isBoolOp(line->token)) {
+		current->resultType = VariableType::BOOL;
+	} else if(Keywords::isAssignment(line->token)) {
+		current->resultType = VariableType::VOID;
 	} else {
-		current->result = current->children[0]->result;
+		current->resultType = current->children[0]->resultType;
 	}
 	return current;
 }
@@ -80,9 +90,13 @@ Action* parseCall(Node* line, bool& finished, DefinitonList& defs) {
 	current->tok = line->token;
 	
 	for(size_t i = 0; i < defs.size(); i++) {
-		if(defs[i].first == current->tok->text) {
-			current->type = VARIABLE;
-			current->result = defs[i].second;
+		if(defs[i].name == current->tok->text) {
+			current->resultType = defs[i].type;
+			if(defs[i].isFunc) { 
+				current->type = CALL; 
+			} else {
+				current->type = VARIABLE;
+			}
 		}
 	}
 	if(current->type != VARIABLE) {
@@ -114,7 +128,7 @@ Action* parseNode(Node* n, bool& finished, DefinitonList& defs){
 		toRet = new Action;
 		toRet->tok = n->token;
 		toRet->type = LITVAL;
-		toRet->result = Keywords::bestFit(*(n->token));
+		toRet->resultType = Keywords::bestFit(*(n->token));
 	}
 
 	return toRet;
@@ -131,8 +145,14 @@ Action* parseActionTree(std::vector<Node*> lines, unsigned& pos, DefinitonList& 
 	return toRet;
 }
 
-void ActionTree::writeActionTree(std::vector<Node*> parsed) {
-	
+void ActionTree::writeActionTreeList(const Parser& parser) {
+	if(!parser.isReady()) {
+		std::cerr << "Parser was not ready!" << std::endl;
+		throw "Unready Parser";
+	}
+
+	const auto& parsed = parser.parsedTokens();
+
 	for(unsigned i = 0; i < parsed.size(); i++) {
 		actions.push_back(parseActionTree(parsed, i, definedItems));
 	}
@@ -149,7 +169,7 @@ void ActionTree::printActionTree(const Action* node, unsigned currentDepth) cons
 		case ActionType::PARAM: std::cout << "PARAMETER"; break;
 		case ActionType::DECISION: std::cout << "DECISION"; break;
 	}
-	std::cout << std::setw(14) <<node->result << std::setw(7)<< currentDepth << std::endl;
+	std::cout << std::setw(14) <<node->resultType << std::setw(7)<< currentDepth << std::endl;
 
 	for(unsigned i = 0; i < node->children.size(); i++) {
 		printActionTree(node->children[i], currentDepth + 1);

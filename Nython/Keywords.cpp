@@ -1,19 +1,36 @@
 #include "Keywords.h"
 
+#include <algorithm>
 #include <cctype>
 
 std::vector<std::string>	Keywords::operators = {"=", "==", "<", "<=", ">", ">=", "++", "--", "->", "-", "+", "*", "**", "/", "%"};
 std::vector<std::string>	Keywords::delineators = {"(",")","|"};
-std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif"};
+std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif", "endif"};
 std::vector<std::string>	Keywords::types = {"int","void","float","string","char", "bool"};
 
+bool Keywords::getBoolFromToken(const Token* value) {
+	std::string lowered(value->text);
+	std::transform(value->text.begin(), value->text.end(), lowered.begin(), std::tolower);
+
+	if(lowered == "true" || lowered == "1") {
+		return true;
+	} else if(lowered == "false" || lowered == "0") {
+		return false;
+	}
+	std::cout << "The value of " << value->text << " is recognized as true." << std::endl;
+	return true;
+}
+
 VariableType Keywords::bestFit(const Token & tok) {
-	bool canBeInt = true, canBeFloat = true;
+	bool canBeInt = true, canBeFloat = true, previousDot = false;
 	for(unsigned i = 0; i < tok.text.length(); i++) {
 		if(!isdigit(tok.text[i])) {
 			canBeInt = false;
-			if(tok.text[i] != '.') {
-				canBeFloat = false;
+			if(tok.text[i] == '.') {
+				if(previousDot) {
+					canBeFloat = false;
+				}
+				previousDot = true;
 			}
 		}
 	}
@@ -28,7 +45,7 @@ VariableType Keywords::bestFit(const Token & tok) {
 		return VariableType::BOOL;
 	}
 
-	if(tok.text.length() == 3) {
+	if(tok.text.length() == 3 && tok.text[0] == tok.text[2]) {
 		return VariableType::CHAR;
 	}
 

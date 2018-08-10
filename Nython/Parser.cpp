@@ -23,18 +23,18 @@ unsigned nextOfType(TOKEN_LIST, unsigned start, TokenType type, bool walkBackwar
 		do {
 			toRet--;
 			current = tokenList[toRet];
-			if(Keywords::isSecondOfPairDelin(*current)) {
+			if(Keywords::isSecondOfPairDelin(current)) {
 				depth++;
-			} else if(Keywords::isFirstOfPairDelin(*current)) { depth--; }
+			} else if(Keywords::isFirstOfPairDelin(current)) { depth--; }
 
 		} while((current->type != type || depth != 0) && toRet > 0);
 	} else {
 		do {
 			toRet++; 
 			current = tokenList[toRet];
-			if(Keywords::isSecondOfPairDelin(*current)) {
+			if(Keywords::isSecondOfPairDelin(current)) {
 				depth--;
-			} else if(Keywords::isFirstOfPairDelin(*current)) { depth++; }
+			} else if(Keywords::isFirstOfPairDelin(current)) { depth++; }
 		} while((current->type != type || depth != 0) && toRet < tokenList.size() - 1);
 	}
 	return toRet;
@@ -66,7 +66,7 @@ Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end, bool walkBackwa
 	}
 
 	while(toRet == NULL) {
-		const auto current = *tokenList[end];
+		const auto current = tokenList[end];
 		if(Keywords::isSecondOfPairDelin(current) && depth == 0) {
 			toRet = tokenList[end];
 		} else {
@@ -107,7 +107,7 @@ Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
 	end = start + 1;
 
 	while(toRet == NULL) {
-		if(Keywords::isEndOfConditional(*tokenList[end])) {
+		if(Keywords::isEndOfConditional(tokenList[end])) {
 			toRet = tokenList[end];
 		} else { end++; }
 	}
@@ -116,22 +116,22 @@ Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
 }
 
 void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
-	auto isBin = Keywords::isBinaryOp(*tokenList[pos]);
+	auto isBin = Keywords::isBinaryOp(tokenList[pos]);
 	auto leftLoc = nextOfType(tokenList, pos, TokenType::IDENTIFIER, true);
 	
-	auto prevNode = !Keywords::isAssignment(*(addTo->token)) && tokenList[pos - 1]->type == TokenType::DELINEATOR
+	auto prevNode = !Keywords::isAssignment(addTo->token) && tokenList[pos - 1]->type == TokenType::DELINEATOR
 		?parseToken(tokenList, tokenList[leftLoc], leftLoc, tokenList[leftLoc + 1], false)
 		:createNode(tokenList[leftLoc]);
 	
 	if(isBin) {
 		auto nextNode = createNode(tokenList[pos + 1]);
 
-		if(tokenList[pos - 2]->type == TokenType::TYPE && Keywords::isAssignment(*(addTo->token))) {
+		if(tokenList[pos - 2]->type == TokenType::TYPE && Keywords::isAssignment(addTo->token)) {
 			auto type = createNode(tokenList[pos - 2]);
 			prevNode->children.push_back(type);
 		}
 
-		if(Keywords::isFirstOfPairDelin(*(tokenList[pos + 2]))) {
+		if(Keywords::isFirstOfPairDelin(tokenList[pos + 2])) {
 			pos++;
 			parseIdentifier(tokenList, nextNode, pos, tokenList[pos + 1]);
 		}
@@ -182,7 +182,7 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 
 void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
-	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(*next)) {
+	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
 
 		auto endOfPairPos = pos + 2;
 		auto otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPairPos);
@@ -191,16 +191,16 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 		for(unsigned j = pos + 1; j < endOfPairPos; j++) {
 			const auto current = tokenList[j];
 			
-			if((current->type == TokenType::DELINEATOR && depth == 0)|| Keywords::nonPairedDelin(*current)) {
+			if((current->type == TokenType::DELINEATOR && depth == 0)|| Keywords::nonPairedDelin(current)) {
 				const auto delin = createNode(current);
 				parseAfterDelineator(tokenList, delin, j);
 				comm->children.push_back(delin);
 			} 
 
-			if(Keywords::isFirstOfPairDelin(*current)) {
+			if(Keywords::isFirstOfPairDelin(current)) {
 				depth++;
 				//std::cout << "Depth change " << depth << " Line #" << current->line_number << std::endl;
-			} else if(Keywords::isSecondOfPairDelin(*current)) {
+			} else if(Keywords::isSecondOfPairDelin(current)) {
 				depth--;
 			}
 		}
@@ -210,7 +210,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 		pos = endOfPairPos;
 
-		if(Keywords::isLoopStart(*(comm->token))) {
+		if(Keywords::isLoopStart(comm->token)) {
 			unsigned endLoopPos = pos;
 			Token* endLoop = endOfLoop(tokenList, pos, endLoopPos);
 			pos++;
@@ -220,7 +220,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			delinEnd->children.push_back(loopEnd);
 
 			pos = endLoopPos;
-		} else if(Keywords::isConditionalStart(*(comm->token))) {
+		} else if(Keywords::isConditionalStart(comm->token)) {
 			unsigned endIfPos = pos;
 			endOfIf(tokenList, pos, endIfPos);
 			pos++;
@@ -235,7 +235,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			pos++;
 			Node* param = parseToken(tokenList, next, pos, tokenList[pos + 1], pos + 1 == tokenList.size());
 			comm->children.push_back(param);
-		} else if(Keywords::isFuncEnd(*(comm->token))) {
+		} else if(Keywords::isFuncEnd(comm->token)) {
 			if(next->type == TokenType::LITERAL) {
 				Node* param = createNode(next);
 				comm->children.push_back(param);
@@ -278,7 +278,7 @@ void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 		id->children.push_back(prevNode);
 	}
 
-	if(next->type==TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(*next)) {
+	if(next->type==TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
 		unsigned endOfPair = pos + 2;
 		pos++;
 		otherEndOfPair(tokenList, pos, endOfPair);
@@ -327,6 +327,7 @@ Parser::Parser(TOKEN_LIST) {
 	roots = parseTokens(tokenList);
 	trimRoots();
 	roots.shrink_to_fit();
+	ready = true;
 }
 
 std::vector<Node*> Parser::parseTokens(TOKEN_LIST) {
