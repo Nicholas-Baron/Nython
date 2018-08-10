@@ -15,7 +15,7 @@ std::vector<std::string> loadedProgram;
 Parser parseTree;
 ActionTree actions;
 
-bool loaded = false;
+bool loaded = false, parsed = false;
 
 //Ensure a valid user inputted location
 std::string getFileLocation () {
@@ -36,9 +36,18 @@ std::string getFileLocation () {
 inline void loadProgram() {
 	//Loads the file from a user-inputted location
 	loadedProgram = fileContents(getFileLocation());
-	parseTree = Parser(tokens(loadedProgram));
-	actions.writeActionTreeList(parseTree);
 	loaded = true;
+	parsed = false;
+}
+
+inline void parse() { 
+	if(!loaded) {
+		loadProgram();
+	}
+
+	parseTree = Parser(tokens(loadedProgram)); 
+	actions.writeActionTreeList(parseTree);
+	parsed = true;
 }
 
 void showTokens() {
@@ -47,15 +56,15 @@ void showTokens() {
 		loadProgram();
 	}
 
-	for(Token* token : tokens(loadedProgram)) {
+	for(const auto token : tokens(loadedProgram)) {
 		std::cout << *token << std::endl;
 	}
 }
 
 void showParseTrees() {
 	
-	if(!loaded) {
-		loadProgram();
+	if(!parsed) {
+		parse();
 	}
 	
 	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
@@ -67,10 +76,10 @@ void showParseTrees() {
 
 void showActionTrees() {
 	
-	if(!loaded) {
-		loadProgram();
+	if(!parsed) {
+		parse();
 	}
-
+	
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
 		std::cout << "Action Set #" << i << std::endl;
 		actions.printActionTree(actions.actionList()[i]);
@@ -79,14 +88,15 @@ void showActionTrees() {
 }
 
 void runProgram() {
-	
-	if(!loaded) {
-		loadProgram();
-	}
 
+	if(!parsed) {
+		parse();
+	}
+	
 	std::cout << std::endl;
 	Program prog(actions);
 	auto ret = prog.run("main");
+	std::cout << std::endl;
 	switch(ret.type) {
 		case VariableType::INT:
 			std::cout << "Main returned " << *(static_cast<int*>(ret.location)) << std::endl;

@@ -141,11 +141,11 @@ public:
 		switch(def->resultType) {
 			case VariableType::BOOL:
 				setBool(defName, *static_cast<bool*>(val.location));
-				std::cout << defName << " now [TEMP] is " << boolAtID(defName) << std::endl;
+				//std::cout << defName << " now [DEBUG] is " << boolAtID(defName) << std::endl;
 				break;
 			case VariableType::INT:
 				setInt(defName, *static_cast<int*>(val.location));
-				std::cout << defName << " now [TEMP] is " << intAtID(defName) << std::endl;
+				//std::cout << defName << " now [DEBUG] is " << intAtID(defName) << std::endl;
 				break;
 			case VariableType::VOID:
 			default:

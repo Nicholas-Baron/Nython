@@ -306,6 +306,8 @@ Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast) 
 	} else if(t->type == TokenType::IDENTIFIER) {
 		toRet = createNode(t);
 		parseIdentifier(tokenList, toRet, pos, next);
+	} else if (t->type == TokenType::LITERAL){
+		toRet = createNode(t);
 	}
 
 	return toRet;

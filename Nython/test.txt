@@ -3,7 +3,7 @@ void write5
 		print i
 		endline
 	loop
-ret //End write5
+ret
 
 int fib(int n)	
 	if(n==0) 
@@ -15,5 +15,6 @@ int fib(int n)
 
 int main
 	write5
+	print "Fib at 6 is "
 	print fib(6)
 ret 0

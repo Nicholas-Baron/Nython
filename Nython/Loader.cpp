@@ -29,8 +29,7 @@ std::vector<Token*> tokens(const std::vector<std::string>& program) {
 	
 	for(unsigned line = 0; line < program.size(); line++) {
 		bool isComment = false;
-		auto whole_line = trim(program[line]);
-		whole_line = spaceDelimsOps(whole_line);
+		auto whole_line = spaceDelimsOps(trim(program[line]));
 
 		if(hasComment(whole_line)) {
 			const auto first_comment = whole_line.find_first_of("//");
@@ -42,10 +41,8 @@ std::vector<Token*> tokens(const std::vector<std::string>& program) {
 		if(!whole_line.empty() && !isComment) {
 			auto tokens = splitIntoTokens(whole_line, " ");
 			
-			for(unsigned i = 0; i < tokens.size(); i++) {
+			for(const auto current : tokens) {
 				
-				auto current = tokens[i];
-
 				if(hasComment(current)) {
 					const auto first_comment = current.find_first_of("//");
 					if(first_comment == 0) {
@@ -101,6 +98,12 @@ std::vector<std::string> splitIntoTokens(const std::string& str, const std::stri
 		pos = str.find(delim, prev);
 		if(pos == std::string::npos) pos = str.length();
 		
+		auto nextString = str.find('\"', prev);
+		if(nextString < pos) {
+			prev = nextString;
+			pos = str.find('\"', pos) + 1;
+		}
+
 		std::string token = str.substr(prev, pos - prev);
 		if(!token.empty()) tokens.push_back(token);
 		

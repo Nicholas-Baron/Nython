@@ -64,7 +64,9 @@ FunctionReturn Program::processCall(Action* call) {
 		} else if(funcName == "print") {
 			std::cout << doAction(call->children[0]);
 		} else if(Keywords::isFuncEnd(call->tok)) {
-			std::cout << "[TEMP] Returning from a function." << std::endl;
+
+			//std::cout << "[DEBUG] Returning from a function." << std::endl;
+
 			currentExecution.top().second = true;
 			if(call->hasChildren()) {
 				return doAction(call->children[0]);
@@ -136,15 +138,20 @@ FunctionReturn processLiteral(Action* value) {
 	FunctionReturn toRet;
 	toRet.type = value->resultType;
 
+	const auto& text = value->tok->text;
 	switch(value->resultType) {
 		case VariableType::BOOL:
 			toRet.location = new bool{Keywords::getBoolFromToken(value->tok)};
 			break;
 		case VariableType::INT:
-			toRet.location = new int{std::stoi(value->tok->text)};
+			toRet.location = new int{std::stoi(text)};
+			break;
+		case VariableType::STRING:
+			//Cuts off the beginning and ending quote marks
+			toRet.location = new std::string{text.substr(1, text.size() - 2)};
 			break;
 		default:
-			std::cerr << "Can not get a literal value from " << value << std::endl;
+			std::cerr << "Can not get a literal value from " << text << std::endl;
 			break;
 	}
 
@@ -216,7 +223,7 @@ FunctionReturn Program::processOperator(Action* call) {
 							break;
 					}
 				}
-			
+
 			}
 		}
 	} else if(Keywords::isUnaryOp(call->tok) && call->children.size() == 1) {
@@ -269,22 +276,17 @@ FunctionReturn Program::processVariable(Action * var) {
 }
 
 FunctionReturn Program::processDecision(Action * call) {
-	
+
 	if(!Keywords::isConditionalStart(call->tok) && Keywords::isEndOfConditional(call->tok)) {
-		
-		std::cout << call->tok->text << std::endl;
 		return doAction(call->children[0]);
-		//return FunctionReturn{VariableType::BOOL, new bool(true)};
 	}
-	
+
 	auto result = static_cast<bool>(doAction(call->children[0]));
 
 	if(result && Keywords::isConditionalStart(call->tok) && !Keywords::isEndOfConditional(call->tok)) {
 		return doAction(call->children[1]);
-		//return FunctionReturn{VariableType::BOOL, new bool(result)};
 	} else if(result && Keywords::isConditionalStart(call->tok) && Keywords::isEndOfConditional(call->tok)) {
 		return doAction(call->children[1]);
-		//return FunctionReturn{VariableType::BOOL, new bool(result)};
 	}
 
 	return FunctionReturn{VariableType::BOOL, new bool(false)};
@@ -338,7 +340,7 @@ FunctionReturn Program::run(const std::string & funcName, StackFrame params) {
 	currentExecution.push(std::make_pair(startLoc, false));
 	frames.push(params);
 
-	std::cout << "[TEMP] Calling " << funcName << " w/ parameters " << params << std::endl;
+	//std::cout << "[DEBUG] Calling " << funcName << " w/ parameters " << params << std::endl;
 
 	auto result = doAction(func);
 	currentExecution.pop();
