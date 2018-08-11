@@ -56,7 +56,7 @@ VariableType Keywords::bestFit(const Token & tok) {
 TokenType Keywords::getTokenType(const std::string & text) {
 
 	const auto first_space = text.find_first_of(" ");
-	if(first_space != std::string::npos && text.find_first_of('\"') != 0) {
+	if(first_space != std::string::npos && text.find_first_of('"') != 0) {
 		throw "Can not get a token with a space in it";
 	}
 

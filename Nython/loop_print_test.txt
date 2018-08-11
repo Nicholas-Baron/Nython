@@ -1,0 +1,10 @@
+void write(int n)
+	repeat(int i = 0|i < n|i++)
+		print i
+		endline
+	loop
+ret
+
+void main
+	write(9)
+ret

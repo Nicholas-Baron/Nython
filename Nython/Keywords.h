@@ -44,10 +44,10 @@ public:
 
 	inline static bool isLoopStart(const Token* tok) { return tok->type == TokenType::COMMAND && tok->text == "repeat"; }
 	inline static bool isConditionalStart(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "if" || tok->text == "elif"); }
-	inline static bool isEndOfLoop(const Token& tok) { return tok.type == TokenType::COMMAND && tok.text == "loop"; }
+	inline static bool isEndOfLoop(const Token* tok) { return tok->type == TokenType::COMMAND && tok->text == "loop"; }
 	inline static bool isEndOfConditional(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "elif" || tok->text == "else" || tok->text == "endif"); }
-	inline static bool needsParameter(const Token& tok) { 
-		return tok.type == TokenType::COMMAND && (tok.text == "print" || tok.text == "if" || tok.text == "elif" || tok.text == "else"); 
+	inline static bool needsParameter(const Token* tok) { 
+		return tok->type == TokenType::COMMAND && (tok->text == "print" || tok->text == "if" || tok->text == "elif" || tok->text == "else"); 
 	}
 	
 	static bool getBoolFromToken(const Token* tok);
@@ -63,8 +63,10 @@ public:
 
 	template<class T, class U>
 	static bool opTest (const std::string& op, T left, U right);
-	template<class T, class U>
-	static T opMath(const std::string& op, T left, U right);
+	
+	static int opMath(const std::string& op, int left, int right);
+	static float opMath(const std::string& op, float left, float right);
+	
 	template<class T>
 	static void opUnary(const std::string& op, T& var);
 };
@@ -82,11 +84,12 @@ inline bool Keywords::opTest (const std::string & op, T left, U right) {
 	} else if(op == "<=") {
 		return left <= right;
 	}
+
+	std::cerr << "[ERR] Unimplemented test operator: " << op << std::endl;
 	return false;
 }
 
-template<class T, class U>
-inline T Keywords::opMath(const std::string & op, T left, U right) {
+inline int Keywords::opMath(const std::string & op, int left, int right) {
 	if(op == "+") {
 		return left + right;
 	} else if(op == "-") {
@@ -95,7 +98,27 @@ inline T Keywords::opMath(const std::string & op, T left, U right) {
 		return left * right;
 	} else if(op == "/") {
 		return left / right;
+	} else if(op == "%") {
+		return left % right;
 	}
+	
+	std::cerr << "[ERR] Unimplemented int math operator: " << op << std::endl;
+	return 0;
+}
+
+inline float Keywords::opMath(const std::string & op, float left, float right) {
+	if(op == "+") {
+		return left + right;
+	} else if(op == "-") {
+		return left - right;
+	} else if(op == "*") {
+		return left * right;
+	} else if(op == "/") {
+		return left / right;
+	} 
+
+	std::cerr << "[ERR] Unimplemented float math operator: " << op << std::endl;
+	return 0;
 }
 
 template<class T>
@@ -106,6 +129,8 @@ inline void Keywords::opUnary(const std::string & op, T& var) {
 		var--;
 	}else if(op == "!") {
 		var = !var;
+	} else {
+		std::cerr << "[ERR] Unimplemented unary operator: " << op << std::endl;
 	}
 }
 
@@ -113,7 +138,9 @@ template<>
 inline void Keywords::opUnary(const std::string & op, bool& var) {
 	if(op == "!") {
 		var = !var;
-	} 
+	} else {
+		std::cerr << "[ERR] Unimplemented bool unary operator: " << op << std::endl;
+	}
 }
 
 #endif // !_KEYWORDS

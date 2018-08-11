@@ -10,6 +10,7 @@ struct FunctionReturn {
 	VariableType type;
 	void* location;
 
+	//Casting operators
 	operator bool() const {
 		if(type != VariableType::BOOL) {
 			std::cerr << "Converting " << type << " to a bool" << std::endl;
@@ -17,9 +18,19 @@ struct FunctionReturn {
 		return *static_cast<bool*>(location);
 	}
 
+	operator char() const {
+		if(type != VariableType::CHAR) {
+			std::cerr << "Converting " << type << " to a char" << std::endl;
+		}
+		return *static_cast<char*>(location);
+	}
+
 	operator int() const {
 		if(type != VariableType::INT) {
 			std::cerr << "Converting " << type << " to an int" << std::endl;
+			if(type == VariableType::FLOAT) {
+				return static_cast<int>(this->operator float());
+			}
 		}
 		return *static_cast<int*>(location);
 	}
@@ -27,8 +38,18 @@ struct FunctionReturn {
 	operator float() const {
 		if(type != VariableType::FLOAT) {
 			std::cerr << "Converting " << type << " to a float" << std::endl;
+			if(type == VariableType::INT) {
+				return static_cast<float>(this->operator int());
+			}
 		}
 		return *static_cast<float*>(location);
+	}
+
+	operator std::string() const {
+		if(type != VariableType::STRING) {
+			std::cerr << "Converting " << type << " to a float" << std::endl;
+		}
+		return *static_cast<std::string*>(location);
 	}
 };
 
@@ -90,7 +111,7 @@ public:
 			return;
 		}
 		floats[name] = val;
-		typeMap[name] = VariableType::CHAR;
+		typeMap[name] = VariableType::FLOAT;
 	}
 	void setString(const std::string& name, const std::string& val) {
 		if(getTypeOf(name) != VariableType::STRING) {
@@ -140,11 +161,11 @@ public:
 		
 		switch(def->resultType) {
 			case VariableType::BOOL:
-				setBool(defName, *static_cast<bool*>(val.location));
+				setBool(defName, static_cast<bool>(val));
 				//std::cout << defName << " now [DEBUG] is " << boolAtID(defName) << std::endl;
 				break;
 			case VariableType::INT:
-				setInt(defName, *static_cast<int*>(val.location));
+				setInt(defName, static_cast<int>(val));
 				//std::cout << defName << " now [DEBUG] is " << intAtID(defName) << std::endl;
 				break;
 			case VariableType::VOID:
@@ -162,6 +183,8 @@ std::ostream& operator<<(std::ostream& lhs, const StackFrame& rhs);
 class Program {
 private:
 	const ActionTree& actions;
+
+	//Holds tree location and whether the function has returned
 	std::stack<std::pair<unsigned, bool>> currentExecution;
 	std::stack<StackFrame> frames;
 

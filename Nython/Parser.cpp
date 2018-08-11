@@ -93,7 +93,7 @@ Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 	end = start + 1;
 
 	while(toRet == NULL) {
-		if(Keywords::isEndOfLoop(*tokenList[end])) {
+		if(Keywords::isEndOfLoop(tokenList[end])) {
 			toRet = tokenList[end];
 		} else { end++; }
 	}
@@ -182,7 +182,7 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 
 void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
-	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
+	if(next != nullptr && next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
 
 		auto endOfPairPos = pos + 2;
 		auto otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPairPos);
@@ -199,7 +199,6 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 			if(Keywords::isFirstOfPairDelin(current)) {
 				depth++;
-				//std::cout << "Depth change " << depth << " Line #" << current->line_number << std::endl;
 			} else if(Keywords::isSecondOfPairDelin(current)) {
 				depth--;
 			}
@@ -231,12 +230,15 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 	} else {
 	
-		if(Keywords::needsParameter(*(comm->token))) {
+		if(Keywords::needsParameter(comm->token)) {
 			pos++;
 			Node* param = parseToken(tokenList, next, pos, tokenList[pos + 1], pos + 1 == tokenList.size());
 			comm->children.push_back(param);
 		} else if(Keywords::isFuncEnd(comm->token)) {
-			if(next->type == TokenType::LITERAL) {
+			if(next == nullptr) {
+				//A blank return (ends a void function)
+				return;
+			} else if(next->type == TokenType::LITERAL) {
 				Node* param = createNode(next);
 				comm->children.push_back(param);
 				pos++;

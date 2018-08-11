@@ -1,20 +1,12 @@
-void write5
-	repeat(int i = 0|i < 5|i++)
-		print i
-		endline
-	loop
-ret
-
 int fib(int n)	
 	if(n==0) 
 		ret 0
 	elif(n<=2) 
 		ret 1
 	else
-		ret fib(n-1) + fib(n-2)
+ret fib(n-1) + fib(n-2)
 
 int main
-	write5
 	print "Fib at 6 is "
 	print fib(6)
 ret 0

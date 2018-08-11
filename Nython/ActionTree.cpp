@@ -41,7 +41,7 @@ Action* parseCommand(Node* line, bool& finished, DefinitonList& defs) {
 			finished = true;
 		}
 	} else if(line->token->text == "endline") { //Left for potential further edits
-	} else if(Keywords::isEndOfLoop(*(line->token))) { //Left for potential further edits
+	} else if(Keywords::isEndOfLoop(line->token)) { //Left for potential further edits
 	} 
 
 	return current;

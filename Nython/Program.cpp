@@ -91,7 +91,7 @@ FunctionReturn Program::processCall(Action* call) {
 
 	//Run user-defined function
 	unsigned defLocation = 0;
-	const auto definition = findTree(funcName, defLocation);
+	const auto& definition = findTree(funcName, defLocation);
 
 	//Ensure correctness of parameters
 	unsigned numParameters = 0;
@@ -122,7 +122,7 @@ FunctionReturn Program::processCall(Action* call) {
 
 		if(callSide->resultType != defSide->resultType) {
 			std::cerr << "Wrong parameter type for " << defSide->tok->text << ": " << callSide->tok->text << std::endl;
-		} else if(callSide->type == LITVAL) {
+		} else if(callSide->type == LITVAL) { //TODO: Merge with below if
 			params.setVariable(defSide, callSide);
 		} else if(callSide->type == OPCALL || callSide->type == CALL) {
 			params.setVariable(defSide, doAction(callSide));
@@ -135,8 +135,7 @@ FunctionReturn Program::processCall(Action* call) {
 }
 
 FunctionReturn processLiteral(Action* value) {
-	FunctionReturn toRet;
-	toRet.type = value->resultType;
+	FunctionReturn toRet{value->resultType};
 
 	const auto& text = value->tok->text;
 	switch(value->resultType) {
@@ -170,9 +169,8 @@ FunctionReturn Program::processOperator(Action* call) {
 			toRet.type = VariableType::VOID;
 			auto success = currentFrame().setVariable(left, right);
 			if(!success) {
-				std::cerr << "Failed to set " << left->tok->text << " to " << right->tok->text << std::endl;
+				std::cerr << "[ERR] Failed to set " << left->tok->text << " to " << right->tok->text << std::endl;
 			}
-			return toRet;
 
 		//Binary
 		} else if(Keywords::isBinaryOp(call->tok)) {
@@ -195,10 +193,10 @@ FunctionReturn Program::processOperator(Action* call) {
 							toRet.location = new bool(Keywords::opTest(op, left, static_cast<float>(resRight)));
 							break;
 						default:
-							std::cerr << "Unsupported comparison!" << std::endl;
+							std::cerr << "[ERR] Unsupported comparison!" << std::endl;
 							break;
 					}
-				}
+				} else { std::cerr << "[ERR] Unimplemented operator action!" << std::endl; }
 			} else {
 				//Is math operation
 				auto preferred = resLeft.type;
@@ -210,16 +208,15 @@ FunctionReturn Program::processOperator(Action* call) {
 				toRet.type = preferred;
 
 				if(preferred == VariableType::INT) {
-					auto left = static_cast<int>(resLeft);
 					switch(resRight.type) {
 						case VariableType::INT:
-							toRet.location = new int(Keywords::opMath(op, left, static_cast<int>(resRight)));
+							toRet.location = new int(Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight)));
 							break;
 						case VariableType::FLOAT:
-							toRet.location = new float(Keywords::opMath(op, left, static_cast<float>(resRight)));
+							toRet.location = new float(Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight)));
 							break;
 						default:
-							std::cerr << "Unsupported comparison!" << std::endl;
+							std::cerr << "Unsupported math operation!" << std::endl;
 							break;
 					}
 				}
@@ -244,12 +241,12 @@ FunctionReturn Program::processOperator(Action* call) {
 
 			if(var->resultType == VariableType::INT) {
 				auto val = currentFrame().intAtID(varName);
-				val++;
+				Keywords::opUnary(call->tok->text, val);
 				toRet.location = new int(val);
 				currentFrame().setInt(varName, val);
 			} else if(var->resultType == VariableType::FLOAT) {
 				auto val = currentFrame().floatAtID(varName);
-				val++;
+				Keywords::opUnary(call->tok->text, val);
 				toRet.location = new float(val);
 				currentFrame().setFloat(varName, val);
 			}
@@ -317,7 +314,7 @@ FunctionReturn Program::doAction(Action* tree) {
 			return processOperator(tree);
 		case ActionType::DEFINITION:
 			FunctionReturn toRet;
-			for(auto child : tree->children) {
+			for(auto& child : tree->children) {
 				if(child->type != ActionType::DEFINITION && !currentExecution.top().second) {
 					toRet = doAction(child);
 				}
@@ -330,6 +327,9 @@ FunctionReturn Program::doAction(Action* tree) {
 			break;
 	}
 
+	//Should never get here!
+	std::cerr << "[ERR] Some action was not processed!" << std::endl;
+	return FunctionReturn();
 }
 
 FunctionReturn Program::run(const std::string & funcName, StackFrame params) {
@@ -339,8 +339,6 @@ FunctionReturn Program::run(const std::string & funcName, StackFrame params) {
 
 	currentExecution.push(std::make_pair(startLoc, false));
 	frames.push(params);
-
-	//std::cout << "[DEBUG] Calling " << funcName << " w/ parameters " << params << std::endl;
 
 	auto result = doAction(func);
 	currentExecution.pop();
@@ -352,23 +350,23 @@ FunctionReturn Program::run(const std::string & funcName, StackFrame params) {
 std::ostream & operator<<(std::ostream & lhs, const FunctionReturn & rhs) {
 	switch(rhs.type) {
 		case VariableType::BOOL:
-			if(!*static_cast<bool*>(rhs.location)) {
+			if(!static_cast<bool>(rhs)) {
 				lhs << "FALSE";
 			} else {
 				lhs << "TRUE";
 			}
 			break;
 		case VariableType::CHAR:
-			lhs << *static_cast<char*>(rhs.location);
+			lhs << static_cast<char>(rhs);
 			break;
 		case VariableType::FLOAT:
-			lhs << *static_cast<float*>(rhs.location);
+			lhs << static_cast<float>(rhs);
 			break;
 		case VariableType::INT:
-			lhs << *static_cast<int*>(rhs.location);
+			lhs << static_cast<int>(rhs);
 			break;
 		case VariableType::STRING:
-			lhs << *static_cast<std::string*>(rhs.location);
+			lhs << static_cast<std::string>(rhs);
 			break;
 		default:
 			lhs << "VOID";
@@ -397,7 +395,7 @@ std::ostream& operator<<(std::ostream& lhs, const StackFrame& rhs) {
 				lhs << rhs.intAtID(var.first);
 				break;
 			default:
-				lhs << "Unimplemented variable type: " << var.second;
+				lhs << "[ERR] Unimplemented variable type: " << var.second;
 				break;
 		}
 	}
