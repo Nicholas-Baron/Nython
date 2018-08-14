@@ -38,7 +38,8 @@ public:
 	inline static bool isBoolOp(const Token* tok) {
 		return isOperator(tok->text) && (tok->text[0] == '<' || tok->text[0] == '>' || tok->text[0] == '!' || tok->text == "==");
 	}
-	inline static bool isAssignment(const Token* tok) { return tok->type == TokenType::OPERATOR && isBinaryOp(tok) && tok->text == "="; }
+	inline static bool isAssignment(const Token* tok) { return tok->type == TokenType::OPERATOR && isBinaryOp(tok) && (tok->text == "=" || tok->text == "+="); }
+	inline static bool isAssignAfterOp(const Token* tok) { return isAssignment(tok) && tok->text[0] != '='; }
 	inline static bool isUnaryOp(const Token* tok) { return !isBinaryOp(tok) && isOperator(tok->text); }
 	inline static bool canUseIncre(const VariableType& type) { return type == VariableType::FLOAT || type == VariableType::INT; }
 
@@ -55,6 +56,17 @@ public:
 	inline static bool isFuncEnd(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "ret" || tok->text == "return"); }
 	//Returns the optimal type for a variable
 	static VariableType bestFit(const Token& tok);
+	inline static bool compatibleVarTypes(const VariableType origin, const VariableType dest) {
+		if(origin == dest) {
+			return true;
+		}else if(origin == VariableType::VOID || dest == VariableType::VOID) {
+			return false;
+		} else if(origin == VariableType::INT && dest == VariableType::FLOAT) {
+			return true;
+		}
+
+		return false;
+	}
 
 	static TokenType getTokenType(const std::string& text);
 	static VariableType getVarType(const Token& tok);

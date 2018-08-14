@@ -30,7 +30,23 @@ inline std::string trim(const std::string& str_in, const std::string& whitespace
 	return str_in.substr(strBegin, strRange + 1);
 }
 
-inline bool hasComment(const std::string& str_in) { return str_in.find_first_of("//") != std::string::npos; }
+inline bool hasComment(const std::string& str_in, unsigned& loc) { 
+	for(unsigned i = loc; i < str_in.size(); i++) {
+		const char& c = str_in[i];
+		if(c == '/') {
+			for(unsigned j = i + 1; j < str_in.size(); j++) {
+				if(str_in[j] == '/') {
+					return true;
+				} else if(str_in[j] != ' ') {
+					j = str_in.size();
+				}
+			}
+		}
+	
+	}
+
+	return false;
+}
 
 std::vector<std::string> splitIntoTokens(const std::string& str, const std::string& delim);
 

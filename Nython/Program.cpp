@@ -120,11 +120,9 @@ FunctionReturn Program::processCall(Action* call) {
 		auto defSide = definition->children[i];
 		auto callSide = call->children[i];
 
-		if(callSide->resultType != defSide->resultType) {
-			std::cerr << "Wrong parameter type for " << defSide->tok->text << ": " << callSide->tok->text << std::endl;
-		} else if(callSide->type == LITVAL) { //TODO: Merge with below if
-			params.setVariable(defSide, callSide);
-		} else if(callSide->type == OPCALL || callSide->type == CALL) {
+		if(!Keywords::compatibleVarTypes(callSide->resultType, defSide->resultType)) {
+			std::cerr << "Wrong parameter type for " << defSide->tok->text << ": " << callSide->resultType << std::endl;
+		} else if(callSide->type == OPCALL || callSide->type == CALL || callSide->type == LITVAL) {
 			params.setVariable(defSide, doAction(callSide));
 		} else {
 			std::cerr << "Variable not set: " << defSide->tok->text << std::endl;
@@ -167,7 +165,33 @@ FunctionReturn Program::processOperator(Action* call) {
 		if(Keywords::isAssignment(call->tok)) {
 
 			toRet.type = VariableType::VOID;
-			auto success = currentFrame().setVariable(left, right);
+			bool success = false;
+			if(!Keywords::isAssignAfterOp(call->tok)) {
+				success = currentFrame().setVariable(left, doAction(right));
+			} else {
+				//Format op as just the non-assignment op
+				const char op[] = {call->tok->text[0], '\0'};
+				const auto resLeft = doAction(left);
+				const auto resRight = doAction(right);
+				
+				//Is math operation
+				switch(left->resultType) {
+					case VariableType::INT: {
+						int tempI = Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight));
+						success = currentFrame().setVariable(left, FunctionReturn{VariableType::INT, new int{tempI}}); 
+					}
+						break;
+					case VariableType::FLOAT: {
+						float tempF = Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight));
+						success = currentFrame().setVariable(left, FunctionReturn{VariableType::FLOAT, new float{tempF}}); 
+					}
+						break;
+					default:
+						std::cerr << "Unsupported math operation!" << std::endl;
+						break;
+				}
+			}
+			
 			if(!success) {
 				std::cerr << "[ERR] Failed to set " << left->tok->text << " to " << right->tok->text << std::endl;
 			}
@@ -207,18 +231,16 @@ FunctionReturn Program::processOperator(Action* call) {
 
 				toRet.type = preferred;
 
-				if(preferred == VariableType::INT) {
-					switch(resRight.type) {
-						case VariableType::INT:
-							toRet.location = new int(Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight)));
-							break;
-						case VariableType::FLOAT:
-							toRet.location = new float(Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight)));
-							break;
-						default:
-							std::cerr << "Unsupported math operation!" << std::endl;
-							break;
-					}
+				switch(preferred) {
+					case VariableType::INT:
+						toRet.location = new int(Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight)));
+						break;
+					case VariableType::FLOAT:
+						toRet.location = new float(Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight)));
+						break;
+					default:
+						std::cerr << "Unsupported math operation!" << std::endl;
+						break;
 				}
 
 			}
@@ -263,6 +285,9 @@ FunctionReturn Program::processVariable(Action * var) {
 	switch(toRet.type) {
 		case VariableType::INT:
 			toRet.location = new int(currentFrame().intAtID(var->tok->text));
+			break;
+		case VariableType::FLOAT:
+			toRet.location = new float(currentFrame().floatAtID(var->tok->text));
 			break;
 		default:
 			std::cerr << "[ERR] Unimplemented variable type used!" << std::endl;

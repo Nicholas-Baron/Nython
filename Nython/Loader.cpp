@@ -29,23 +29,21 @@ std::vector<Token*> tokens(const std::vector<std::string>& program) {
 	
 	for(unsigned line = 0; line < program.size(); line++) {
 		bool isComment = false;
-		auto whole_line = spaceDelimsOps(trim(program[line]));
+		auto whole_line = trim(program[line]);
+		unsigned commentLoc = 0;
 
-		if(hasComment(whole_line)) {
-			const auto first_comment = whole_line.find_first_of("//");
-			if(first_comment == 0) {
-				isComment = true;
-			}
+		if(hasComment(whole_line, commentLoc)) {
+			std::cout << "Comment found on line #" << line << ", character " << commentLoc << std::endl;
 		}
 		
 		if(!whole_line.empty() && !isComment) {
-			auto tokens = splitIntoTokens(whole_line, " ");
+			auto tokens = splitIntoTokens(spaceDelimsOps(whole_line), " ");
 			
 			for(const auto current : tokens) {
 				
-				if(hasComment(current)) {
-					const auto first_comment = current.find_first_of("//");
-					if(first_comment == 0) {
+				unsigned possibleComment = 0;
+				if(hasComment(current, possibleComment)) {
+					if(possibleComment == 0) {
 						isComment = true;
 					}
 				}

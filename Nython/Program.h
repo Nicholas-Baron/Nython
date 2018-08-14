@@ -37,17 +37,18 @@ struct FunctionReturn {
 
 	operator float() const {
 		if(type != VariableType::FLOAT) {
-			std::cerr << "Converting " << type << " to a float" << std::endl;
 			if(type == VariableType::INT) {
 				return static_cast<float>(this->operator int());
 			}
+
+			std::cerr << "Converting " << type << " to a float" << std::endl;
 		}
 		return *static_cast<float*>(location);
 	}
 
 	operator std::string() const {
 		if(type != VariableType::STRING) {
-			std::cerr << "Converting " << type << " to a float" << std::endl;
+			std::cerr << "Converting " << type << " to a string" << std::endl;
 		}
 		return *static_cast<std::string*>(location);
 	}
@@ -122,38 +123,12 @@ public:
 		typeMap[name] = VariableType::STRING;
 	}
 
-	bool setVariable(const Action* def, const Action* val) {
-	
-		const auto& defName = def->tok->text;
-
-		if(def->type != DEFINITION || val->type != LITVAL || val->resultType != def->resultType) {
-			std::cerr << "Could not set " << defName << " to value " << val->tok->text << std::endl;
-			return false;
-		}
-
-		typeMap[defName] = def->resultType;
-
-		switch(def->resultType) {
-			case VariableType::BOOL:
-				setBool(defName, Keywords::getBoolFromToken(val->tok));
-				break;
-			case VariableType::INT:
-				setInt(defName, std::stoi(val->tok->text)); 
-				break;
-			case VariableType::VOID:
-			default:
-				std::cerr << "Variable type either unimplemented or is void!" << std::endl;
-				return false;
-		}
-
-		return true;
-	}
 	bool setVariable(const Action* def, const FunctionReturn& val) {
 	
 		const auto& defName = def->tok->text;
 
-		if(def->type != DEFINITION || val.type != def->resultType) {
-			std::cerr << defName << " could not be set! (FunctionReturn)" << std::endl;
+		if((def->type != DEFINITION && def->type != VARIABLE) || !Keywords::compatibleVarTypes(val.type, def->resultType)) {
+			std::cerr << defName << " could not be set! (FunctionReturn) Value Type: "<< val.type<<", Def Type: "<<def->resultType << std::endl;
 			return false;
 		}
 		
@@ -162,11 +137,12 @@ public:
 		switch(def->resultType) {
 			case VariableType::BOOL:
 				setBool(defName, static_cast<bool>(val));
-				//std::cout << defName << " now [DEBUG] is " << boolAtID(defName) << std::endl;
 				break;
 			case VariableType::INT:
 				setInt(defName, static_cast<int>(val));
-				//std::cout << defName << " now [DEBUG] is " << intAtID(defName) << std::endl;
+				break;
+			case VariableType::FLOAT:
+				setFloat(defName, static_cast<float>(val));
 				break;
 			case VariableType::VOID:
 			default:

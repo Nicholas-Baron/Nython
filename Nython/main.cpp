@@ -31,7 +31,7 @@ std::vector<std::string> loadedProgram;
 Parser parseTree;
 ActionTree actions;
 
-bool loaded = false, parsed = false;
+bool loaded = false, parsed = false, formedActions = false;
 
 //Ensure a valid user inputted location
 std::string getFileLocation() {
@@ -65,6 +65,7 @@ inline void loadProgram() {
 
 	loaded = true;
 	parsed = false;
+	formedActions = false;
 }
 
 inline void parse() {
@@ -92,6 +93,16 @@ inline void parse() {
 	setTimer();
 #endif
 
+	parsed = true;
+	formedActions = false;
+}
+
+void formActionTrees() {
+
+	if(!parsed) {
+		parse();
+	}
+
 	actions.writeActionTreeList(parseTree);
 
 #if TIMING
@@ -101,7 +112,7 @@ inline void parse() {
 	setTimer();
 #endif
 
-	parsed = true;
+	formedActions = true;
 }
 
 void showTokens() {
@@ -134,6 +145,10 @@ void showActionTrees() {
 		parse();
 	}
 
+	if(!formedActions) {
+		formActionTrees();
+	}
+
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
 		std::cout << "Action Set #" << i << std::endl;
 		actions.printActionTree(actions.actionList()[i]);
@@ -145,6 +160,10 @@ void runProgram() {
 
 	if(!parsed) {
 		parse();
+	}
+	
+	if(!formedActions) {
+		formActionTrees();
 	}
 
 	std::cout << std::endl;

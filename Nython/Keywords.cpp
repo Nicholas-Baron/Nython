@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cctype>
 
-std::vector<std::string>	Keywords::operators = {"=", "==", "<", "<=", ">", ">=", "++", "--", "->", "-", "+", "*", "**", "/", "%"};
+std::vector<std::string>	Keywords::operators = {"=", "==", "<", "<=", ">", ">=", "++", "--", "->", "-", "+", "+=", "*", "**", "/", "%"};
 std::vector<std::string>	Keywords::delineators = {"(",")","|"};
 std::vector<std::string>	Keywords::commands = {"print","repeat","loop","ret","return", "endline", "if", "else", "elif", "endif"};
 std::vector<std::string>	Keywords::types = {"int","void","float","string","char", "bool"};

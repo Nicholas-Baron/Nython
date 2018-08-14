@@ -17,25 +17,32 @@ Node* createNode(Token* t) {
 unsigned nextOfType(TOKEN_LIST, unsigned start, TokenType type, bool walkBackwards = false) {
 	
 	unsigned toRet = start;
-	unsigned depth = 0;
+	int depth = 0;
 	Token* current = NULL;
 	if(walkBackwards) {
-		do {
-			toRet--;
-			current = tokenList[toRet];
+		toRet--;
+		current = tokenList[toRet];
+		while((current->type != type || depth != 0) && toRet > 0) {
+			
 			if(Keywords::isSecondOfPairDelin(current)) {
 				depth++;
 			} else if(Keywords::isFirstOfPairDelin(current)) { depth--; }
-
-		} while((current->type != type || depth != 0) && toRet > 0);
-	} else {
-		do {
-			toRet++; 
+			
+			toRet--;
 			current = tokenList[toRet];
+		} 
+	} else {
+		toRet++;
+		current = tokenList[toRet];
+		while((current->type != type || depth != 0) && toRet < tokenList.size() - 1) {
+			
 			if(Keywords::isSecondOfPairDelin(current)) {
 				depth--;
 			} else if(Keywords::isFirstOfPairDelin(current)) { depth++; }
-		} while((current->type != type || depth != 0) && toRet < tokenList.size() - 1);
+			
+			toRet++; 
+			current = tokenList[toRet];
+		} 
 	}
 	return toRet;
 }
@@ -124,11 +131,22 @@ void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 		:createNode(tokenList[leftLoc]);
 	
 	if(isBin) {
-		auto nextNode = createNode(tokenList[pos + 1]);
 
+		auto nextOp = nextOfType(tokenList, pos, TokenType::OPERATOR);
+		bool nextOpUsed = false;
+
+		Node* nextNode = nullptr;
+		if(nextOfType(tokenList, pos, TokenType::TYPE) > nextOp && nextOfType(tokenList, pos, TokenType::COMMAND) > nextOp 
+		   && tokenList[pos + 2]->type == TokenType::OPERATOR) {
+			nextNode = createNode(tokenList[nextOp]);
+			parseOperator(tokenList, nextNode, nextOp);
+			nextOpUsed = true;
+		} else {
+			nextNode = createNode(tokenList[pos + 1]);
+		}
+		//The type name is two spaces behind the current location
 		if(tokenList[pos - 2]->type == TokenType::TYPE && Keywords::isAssignment(addTo->token)) {
-			auto type = createNode(tokenList[pos - 2]);
-			prevNode->children.push_back(type);
+			prevNode->children.push_back(createNode(tokenList[pos - 2]));
 		}
 
 		if(Keywords::isFirstOfPairDelin(tokenList[pos + 2])) {
@@ -138,7 +156,9 @@ void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 
 		addTo->children.push_back(prevNode);
 		addTo->children.push_back(nextNode);
-		if(nextNode->children.size() > 1) {
+		if(nextOpUsed) {
+			pos = nextOp;
+		} else if(nextNode->children.size() > 1) {
 			pos += nextNode->children.size();
 		} else {
 			pos++;
@@ -257,17 +277,12 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 //Reads a sequence of tokens for loops, if-statements, or long returns
 void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end) {
-	auto nxtOp = nextOfType(tokenList, start, TokenType::OPERATOR);
-	if(nxtOp < end) {
-		auto op = createNode(tokenList[nxtOp]);
-		parseOperator(tokenList, op, nxtOp);
-		addTo->children.push_back(op);
-	} else {
-		for(unsigned i = start; i < end; i++) {
-			addTo->children.push_back(parseToken(tokenList, tokenList[i], i, tokenList[i + 1], i + 1 == end));
+	for(unsigned i = start; i < end; i++) {
+		auto parsed = parseToken(tokenList, tokenList[i], i, tokenList[i + 1], i + 1 == end);
+		if(parsed != nullptr) {
+			addTo->children.push_back(parsed);
 		}
 	}
-	
 }
 
 //Identifier is either a variable name or method name
@@ -284,10 +299,19 @@ void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 		unsigned endOfPair = pos + 2;
 		pos++;
 		otherEndOfPair(tokenList, pos, endOfPair);
-		Node* delin = createNode(next);
-		parseAfterDelineator(tokenList, delin, pos);
+		
+		auto nextDelin = nextOfType(tokenList, pos, TokenType::DELINEATOR);
+		while(nextDelin <= endOfPair) {
+			 
+			Node* delin = createNode(tokenList[pos]);
+			parseAfterDelineator(tokenList, delin, pos); 
+			id->children.push_back(delin);
+			pos = nextDelin;
+			nextDelin = nextOfType(tokenList, pos, TokenType::DELINEATOR);
+		}
+
 		pos = endOfPair;
-		id->children.push_back(delin);
+		
 	}
 }
 

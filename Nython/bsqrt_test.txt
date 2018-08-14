@@ -1,0 +1,14 @@
+float bsqrt(float val| int iter)
+	float guess = val / 2
+	repeat(int i = 0|i<iter|i++)
+		float temp = val / guess
+		temp += guess
+		guess = temp / 2
+	loop
+ret guess
+
+void main
+	print "Approximate square root of 5 is "
+	print bsqrt(5|5)
+	endline
+ret
