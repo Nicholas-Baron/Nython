@@ -2,9 +2,10 @@
 
 #include <algorithm>
 
+//TODO: move these into the class
 void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos);
 void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next);
-void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end);
+void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end, bool multiLine);
 void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next);
 Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast);
 
@@ -233,7 +234,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			unsigned endLoopPos = pos;
 			Token* endLoop = endOfLoop(tokenList, pos, endLoopPos);
 			pos++;
-			parseSequence(tokenList, delinEnd, pos, endLoopPos);
+			parseSequence(tokenList, delinEnd, pos, endLoopPos, true);
 
 			Node* loopEnd = createNode(endLoop);
 			delinEnd->children.push_back(loopEnd);
@@ -243,7 +244,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			unsigned endIfPos = pos;
 			endOfIf(tokenList, pos, endIfPos);
 			pos++;
-			parseSequence(tokenList, delinEnd, pos, endIfPos);
+			parseSequence(tokenList, delinEnd, pos, endIfPos, true);
 
 			pos = endIfPos - 1;
 		}
@@ -268,7 +269,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 				auto nextType = nextOfType(tokenList, pos, TokenType::TYPE);
 
 				unsigned stop = std::min(nextCmd, nextType);
-				parseSequence(tokenList, comm, pos, stop);
+				parseSequence(tokenList, comm, pos, stop, false);
 				pos = stop;
 			}
 		}
@@ -276,11 +277,20 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 }
 
 //Reads a sequence of tokens for loops, if-statements, or long returns
-void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end) {
-	for(unsigned i = start; i < end; i++) {
-		auto parsed = parseToken(tokenList, tokenList[i], i, tokenList[i + 1], i + 1 == end);
-		if(parsed != nullptr) {
-			addTo->children.push_back(parsed);
+void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end, bool multiLine) {
+	auto nextOp = nextOfType(tokenList, start, TokenType::OPERATOR);
+
+	if(nextOp < end && !multiLine) {
+		nextOp--; //Moves it one back
+		auto op = parseToken(tokenList, tokenList[nextOp], nextOp , tokenList[nextOp + 1], nextOp + 1 == end);
+		addTo->children.push_back(op);
+
+	} else {
+		for(unsigned i = start; i < end; i++) {
+			auto parsed = parseToken(tokenList, tokenList[i], i, tokenList[i + 1], i + 1 == end);
+			if(parsed != nullptr) {
+				addTo->children.push_back(parsed);
+			}
 		}
 	}
 }

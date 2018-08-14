@@ -8,6 +8,14 @@
 struct Node {
 	Token* token;
 	std::vector<Node*> children;
+
+	unsigned memFootprint() const {
+		auto toRet = sizeof(*this);
+		for(const auto& item : children) {
+			toRet += item->memFootprint();
+		}
+		return toRet;
+	}
 };
 
 class Parser {
@@ -23,6 +31,13 @@ public:
 
 	inline std::vector<Node*> parsedTokens ( ) const { return roots; }
 	inline bool isReady() const { return ready; }
+	unsigned memFootprint() const {
+		auto toRet = sizeof(*this);
+		for(const auto& item : roots) {
+			toRet += item->memFootprint();
+		}
+		return toRet;
+	}
 
 	static void readNode (Node* root, int depth = 0);
 	

@@ -9,6 +9,7 @@
 #include <chrono>
 
 #define TIMING 0
+#define SIZING 0
 
 /*
 Maybe add some documentation so other people can understand what each function does.
@@ -40,7 +41,7 @@ std::string getFileLocation() {
 	std::cout << "Enter a file to load: ";
 	std::cin >> fileLoc;
 
-	while(!isValidFile(fileLoc)) {
+	while(!Loader::isValidFile(fileLoc)) {
 		std::cout << "Invalid file " << fileLoc << std::endl;
 		std::cout << "Enter a different file location: ";
 		std::cin >> fileLoc;
@@ -54,13 +55,19 @@ inline void loadProgram() {
 	const auto progLoc = getFileLocation();
 
 	setTimer();
-	loadedProgram = fileContents(progLoc);
+	loadedProgram = Loader::fileContents(progLoc);
 
 #if TIMING
 	using namespace std::chrono;
 	auto loadingTime = high_resolution_clock::now() - start;
 	std::cout << "Loading program took " << duration_cast<millif>(loadingTime).count() << "ms" << std::endl;
 	setTimer();
+#endif
+
+#if SIZING
+	auto loadedSize = sizeof(loadedProgram);
+	for(const auto& item : loadedProgram) { loadedSize += sizeof(item); }
+	std::cout << "Size of Loaded Program: " << loadedSize << " bytes" << std::endl;
 #endif
 
 	loaded = true;
@@ -75,7 +82,7 @@ inline void parse() {
 
 	setTimer();
 
-	const auto tokenList = tokens(loadedProgram);
+	const auto tokenList = Loader::tokens(loadedProgram);
 
 #if TIMING
 	using namespace std::chrono;
@@ -84,6 +91,12 @@ inline void parse() {
 	setTimer();
 #endif
 
+#if SIZING
+	auto tokenSize = sizeof(tokenList);
+	for(const auto& item : tokenList) { tokenSize += sizeof(item); }
+	std::cout << "Size of Token List: " << tokenSize << " bytes" << std::endl;
+#endif
+	
 	parseTree = Parser(tokenList);
 
 #if TIMING
@@ -91,6 +104,10 @@ inline void parse() {
 	auto parsingTime = high_resolution_clock::now() - start;
 	std::cout << "Parsing the program took " << duration_cast<millif>(parsingTime).count() << "ms" << std::endl;
 	setTimer();
+#endif
+
+#if SIZING
+	std::cout << "Size of Parse Tree: " << parseTree.memFootprint() << " bytes" << std::endl;
 #endif
 
 	parsed = true;
@@ -112,6 +129,10 @@ void formActionTrees() {
 	setTimer();
 #endif
 
+#if SIZING
+	std::cout << "Size of Action: " << actions.memFootprint() << " bytes" << std::endl;
+#endif
+
 	formedActions = true;
 }
 
@@ -121,7 +142,7 @@ void showTokens() {
 		loadProgram();
 	}
 
-	for(const auto token : tokens(loadedProgram)) {
+	for(const auto token : Loader::tokens(loadedProgram)) {
 		std::cout << *token << std::endl;
 	}
 }

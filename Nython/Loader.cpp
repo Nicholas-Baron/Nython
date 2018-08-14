@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-std::vector<std::string> fileContents(const std::string& location) {
+std::vector<std::string> Loader::fileContents(const std::string& location) {
 
 	std::vector<std::string> toRet;
 	std::ifstream file(location.c_str());
@@ -24,7 +24,7 @@ std::vector<std::string> fileContents(const std::string& location) {
 }
 
 //Breaks the string into its tokens
-std::vector<Token*> tokens(const std::vector<std::string>& program) {
+std::vector<Token*> Loader::tokens(const std::vector<std::string>& program) {
 	std::vector<Token*> toRet;
 	
 	for(unsigned line = 0; line < program.size(); line++) {
@@ -61,7 +61,7 @@ std::vector<Token*> tokens(const std::vector<std::string>& program) {
 }
 
 //Adds a space before and after operators
-std::string spaceDelimsOps(const std::string& line) {
+std::string Loader::spaceDelimsOps(const std::string& line) {
 
 	std::string toRet;
 	
@@ -87,7 +87,7 @@ std::string spaceDelimsOps(const std::string& line) {
 }
 
 //Splits a string at each delimiter
-std::vector<std::string> splitIntoTokens(const std::string& str, const std::string& delim) {
+std::vector<std::string> Loader::splitIntoTokens(const std::string& str, const std::string& delim) {
 	std::vector<std::string> tokens;
 	size_t prev = 0, pos = 0;
 	

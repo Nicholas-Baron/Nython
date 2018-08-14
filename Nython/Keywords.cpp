@@ -62,13 +62,13 @@ TokenType Keywords::getTokenType(const std::string & text) {
 
 	TokenType type = TokenType::IDENTIFIER;
 
-	if(contains(operators, text)) {
+	if(VectorUtil::contains(operators, text)) {
 		type = TokenType::OPERATOR;
-	} else if(contains(delineators, text)) {
+	} else if(VectorUtil::contains(delineators, text)) {
 		type = TokenType::DELINEATOR;
-	} else if(contains(commands, text)) {
+	} else if(VectorUtil::contains(commands, text)) {
 		type = TokenType::COMMAND;
-	} else if(contains(types, text)) {
+	} else if(VectorUtil::contains(types, text)) {
 		type = TokenType::TYPE;
 	} else if(text.find_first_of('\"') == 0  || text.find_first_of('\'') == 0 || isdigit(text[0])) {
 		type = TokenType::LITERAL;

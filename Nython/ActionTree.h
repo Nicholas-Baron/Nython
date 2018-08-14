@@ -14,6 +14,13 @@ struct Action {
 	VariableType resultType;
 	std::vector<Action*> children;
 	inline bool hasChildren() const { return children.size() > 0; }
+	unsigned memFootprint() const {
+		auto toRet = sizeof(*this);
+		for(const auto& item : children) {
+			toRet += item->memFootprint();
+		}
+		return toRet;
+	}
 };
 
 struct Definition {
@@ -32,6 +39,13 @@ public:
 	void writeActionTreeList(const Parser& parsed);
 	inline std::vector<Action*> actionList() const { return actions; }
 	void printActionTree(const Action* node, unsigned currentDepth = 0) const;
+	unsigned memFootprint() const {
+		auto toRet = sizeof(*this);
+		for(const auto& item : actions) {
+			toRet += item->memFootprint();
+		}
+		return toRet;
+	}
 };
 
 #endif // !_ACTION_TREE

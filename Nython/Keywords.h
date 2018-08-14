@@ -26,9 +26,9 @@ private:
 	static std::vector<std::string> operators, delineators, commands, types;
 
 public:
-	inline static bool isDelineator(const std::string& item) { return contains(delineators, item); }
-	inline static bool isOperator(const std::string& item) { return contains(operators, item); }
-	inline static bool isCommand(const std::string& item) { return contains(commands, item); }
+	inline static bool isDelineator(const std::string& item) { return VectorUtil::contains(delineators, item); }
+	inline static bool isOperator(const std::string& item) { return VectorUtil::contains(operators, item); }
+	inline static bool isCommand(const std::string& item) { return VectorUtil::contains(commands, item); }
 
 	inline static bool isFirstOfPairDelin(const Token* tok) { return tok->type == TokenType::DELINEATOR && tok->text == "("; }
 	inline static bool isSecondOfPairDelin(const Token* tok) { return tok->type == TokenType::DELINEATOR && tok->text == ")"; }
