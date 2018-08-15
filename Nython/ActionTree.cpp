@@ -22,7 +22,7 @@ Action* parseCommand(Node* line, bool& finished, DefinitonList& defs) {
 	} else if(Keywords::isEndOfConditional(line->token) && line->token->text != "endif") {
 		current->type = DECISION;
 		current->children.push_back(parseNode(line->children[0], finished, defs));
-	} else if(line->token->text == "print"){
+	} else if(line->token->text == "print") {
 		current->resultType = VariableType::VOID;
 		current->children.push_back(parseNode(line->children[0], finished, defs));
 	} else if(Keywords::isLoopStart(line->token)) {
@@ -42,32 +42,31 @@ Action* parseCommand(Node* line, bool& finished, DefinitonList& defs) {
 		}
 	} else if(line->token->text == "endline") { //Left for potential further edits
 	} else if(Keywords::isEndOfLoop(line->token)) { //Left for potential further edits
-	} 
+	}
 
 	return current;
 }
 
 Action* parseDefinition(Node* line, bool& finished, DefinitonList& defs) {
-	
 	Action* current = new Action;
 	current->resultType = Keywords::getVarType(*(line->children[0]->token));
 	current->tok = line->token;
 	current->type = DEFINITION;
-	
+
 	const auto isFunction = line->children.size() >= 2 || current->resultType == VariableType::VOID;
 	if(isFunction) {
 		for(unsigned i = 1; i < line->children.size(); i++) {
 			current->children.push_back(parseNode(line->children[i]->children[0], finished, defs));
 		}
 	}
-	
+
 	defs.push_back(Definition{current->tok->text, current->resultType, isFunction});
-	
+
 	return current;
 }
 
-Action* parseOperator(Node* line, bool& finished, DefinitonList& defs) { 
-	Action* current = new Action; 
+Action* parseOperator(Node* line, bool& finished, DefinitonList& defs) {
+	Action* current = new Action;
 	current->tok = line->token;
 	current->type = OPCALL;
 	current->children.push_back(parseNode(line->children[0], finished, defs));
@@ -88,12 +87,12 @@ Action* parseOperator(Node* line, bool& finished, DefinitonList& defs) {
 Action* parseCall(Node* line, bool& finished, DefinitonList& defs) {
 	Action* current = new Action;
 	current->tok = line->token;
-	
+
 	for(size_t i = 0; i < defs.size(); i++) {
 		if(defs[i].name == current->tok->text) {
 			current->resultType = defs[i].type;
-			if(defs[i].isFunc) { 
-				current->type = CALL; 
+			if(defs[i].isFunc) {
+				current->type = CALL;
 			} else {
 				current->type = VARIABLE;
 			}
@@ -102,7 +101,7 @@ Action* parseCall(Node* line, bool& finished, DefinitonList& defs) {
 	if(current->type != VARIABLE) {
 		current->type = CALL;
 	}
-	
+
 	if(line->children.size() >= 1) {
 		for(unsigned i = 0; i < line->children.size(); i++) {
 			current->children.push_back(parseNode(line->children[i]->children[0], finished, defs));
@@ -111,7 +110,7 @@ Action* parseCall(Node* line, bool& finished, DefinitonList& defs) {
 	return current;
 }
 
-Action* parseNode(Node* n, bool& finished, DefinitonList& defs){
+Action* parseNode(Node* n, bool& finished, DefinitonList& defs) {
 	Action* toRet = NULL;
 	const auto& lineType = n->token->type;
 	if(lineType == TokenType::IDENTIFIER) {
@@ -135,7 +134,6 @@ Action* parseNode(Node* n, bool& finished, DefinitonList& defs){
 }
 
 Action* parseActionTree(std::vector<Node*> lines, unsigned& pos, DefinitonList& definitions) {
-	
 	bool finished = false;
 	Action* toRet = parseNode(lines[pos], finished, definitions);
 	while(!finished) {
@@ -159,7 +157,7 @@ void ActionTree::writeActionTreeList(const Parser& parser) {
 }
 
 void ActionTree::printActionTree(const Action* node, unsigned currentDepth) const {
-	std::cout << std::setw(7)<< *(node->tok) << std::setw(14);
+	std::cout << std::setw(7) << *(node->tok) << std::setw(14);
 	switch(node->type) {
 		case ActionType::DEFINITION: std::cout << "DEFINITION"; break;
 		case ActionType::CALL: std::cout << "CALL"; break;
@@ -169,7 +167,7 @@ void ActionTree::printActionTree(const Action* node, unsigned currentDepth) cons
 		case ActionType::PARAM: std::cout << "PARAMETER"; break;
 		case ActionType::DECISION: std::cout << "DECISION"; break;
 	}
-	std::cout << std::setw(14) <<node->resultType << std::setw(7)<< currentDepth << std::endl;
+	std::cout << std::setw(14) << node->resultType << std::setw(7) << currentDepth << std::endl;
 
 	for(unsigned i = 0; i < node->children.size(); i++) {
 		printActionTree(node->children[i], currentDepth + 1);

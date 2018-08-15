@@ -29,7 +29,7 @@ public:
 	Parser() {}
 	Parser(TOKEN_LIST);
 
-	inline std::vector<Node*> parsedTokens ( ) const { return roots; }
+	inline std::vector<Node*> parsedTokens() const { return roots; }
 	inline bool isReady() const { return ready; }
 	unsigned memFootprint() const {
 		auto toRet = sizeof(*this);
@@ -39,13 +39,11 @@ public:
 		return toRet;
 	}
 
-	static void readNode (Node* root, int depth = 0);
-	
+	static void readNode(Node* root, int depth = 0);
+
 	/*inline static bool isDeclaration(Node* line) {
 		return line->children.size()>=1 && line->children[0]->token->type == TokenType::TYPE;
 	}*/
 };
 
 #endif // !_PARSER
-
-

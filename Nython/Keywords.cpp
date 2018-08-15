@@ -22,15 +22,14 @@ bool Keywords::getBoolFromToken(const Token* value) {
 }
 
 VariableType Keywords::bestFit(const Token & tok) {
-	
 	if(tok.text[0] == '"') {
 		return VariableType::STRING;
-	}else if(tok.text == "true" || tok.text == "false") {
+	} else if(tok.text == "true" || tok.text == "false") {
 		return VariableType::BOOL;
-	}else if(tok.text.length() == 3 && tok.text[0] == tok.text[2]) {
+	} else if(tok.text.length() == 3 && tok.text[0] == tok.text[2]) {
 		return VariableType::CHAR;
 	}
-	
+
 	bool canBeInt = true, canBeFloat = true, previousDot = false;
 	for(unsigned i = 0; i < tok.text.length(); i++) {
 		if(!isdigit(tok.text[i])) {
@@ -54,7 +53,6 @@ VariableType Keywords::bestFit(const Token & tok) {
 }
 
 TokenType Keywords::getTokenType(const std::string & text) {
-
 	const auto first_space = text.find_first_of(" ");
 	if(first_space != std::string::npos && text.find_first_of('"') != 0) {
 		throw "Can not get a token with a space in it";
@@ -70,7 +68,7 @@ TokenType Keywords::getTokenType(const std::string & text) {
 		type = TokenType::COMMAND;
 	} else if(VectorUtil::contains(types, text)) {
 		type = TokenType::TYPE;
-	} else if(text.find_first_of('\"') == 0  || text.find_first_of('\'') == 0 || isdigit(text[0])) {
+	} else if(text.find_first_of('\"') == 0 || text.find_first_of('\'') == 0 || isdigit(text[0])) {
 		type = TokenType::LITERAL;
 	}
 
@@ -78,12 +76,11 @@ TokenType Keywords::getTokenType(const std::string & text) {
 }
 
 VariableType Keywords::getVarType(const Token & tok) {
-	
 	if(tok.type != TokenType::TYPE) {
 		return VariableType::VOID;
-	}else if(tok.text == "int") {
+	} else if(tok.text == "int") {
 		return VariableType::INT;
-	}else if(tok.text == "string") {
+	} else if(tok.text == "string") {
 		return VariableType::STRING;
 	} else if(tok.text == "float") {
 		return VariableType::FLOAT;
@@ -95,7 +92,6 @@ VariableType Keywords::getVarType(const Token & tok) {
 }
 
 void Keywords::printKeywords() {
-	
 	std::cout << "Operators: " << operators << std::endl;
 	std::cout << "Delineators: " << delineators << std::endl;
 	std::cout << "Commands: " << commands << std::endl;
@@ -116,7 +112,7 @@ std::ostream & operator<<(std::ostream & lhs, const TokenType & rhs) {
 }
 
 std::ostream & operator<<(std::ostream & lhs, const VariableType & rhs) {
-	switch (rhs) {
+	switch(rhs) {
 		case VariableType::CHAR: lhs << "CHAR"; break;
 		case VariableType::FLOAT: lhs << "FLOAT"; break;
 		case VariableType::INT: lhs << "INT"; break;

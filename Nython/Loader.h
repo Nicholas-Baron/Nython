@@ -8,11 +8,9 @@
 #include <vector>
 
 namespace Loader {
-
 	std::vector<std::string> fileContents(const std::string& location);
 
 	inline bool isValidFile(const std::string& location) {
-
 		std::ifstream file(location.c_str());
 		const auto error = !file;
 		file.close();
@@ -44,7 +42,6 @@ namespace Loader {
 					}
 				}
 			}
-
 		}
 
 		return false;
@@ -55,4 +52,3 @@ namespace Loader {
 	std::string spaceDelimsOps(const std::string& line);
 }
 #endif // !_LOADER
-

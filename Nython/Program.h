@@ -67,7 +67,7 @@ private:
 
 public:
 	VariableType getTypeOf(const std::string& name) const;
-	
+
 	bool boolAtID(const std::string& name) const;
 	int intAtID(const std::string& name) const;
 	char charAtID(const std::string& name) const;
@@ -92,10 +92,10 @@ public:
 	}
 	void setInt(const std::string& name, int val) {
 		if(getTypeOf(name) != VariableType::INT) {
-			std::cerr << "A not int variable has the name " << name << " (Registered as "<< getTypeOf(name)<< ")" << std::endl;
+			std::cerr << "A not int variable has the name " << name << " (Registered as " << getTypeOf(name) << ")" << std::endl;
 			return;
 		}
-		integers[name] = val; 
+		integers[name] = val;
 		typeMap[name] = VariableType::INT;
 	}
 	void setChar(const std::string& name, char val) {
@@ -124,16 +124,15 @@ public:
 	}
 
 	bool setVariable(const Action* def, const FunctionReturn& val) {
-	
 		const auto& defName = def->tok->text;
 
 		if((def->type != DEFINITION && def->type != VARIABLE) || !Keywords::compatibleVarTypes(val.type, def->resultType)) {
-			std::cerr << defName << " could not be set! (FunctionReturn) Value Type: "<< val.type<<", Def Type: "<<def->resultType << std::endl;
+			std::cerr << defName << " could not be set! (FunctionReturn) Value Type: " << val.type << ", Def Type: " << def->resultType << std::endl;
 			return false;
 		}
-		
+
 		typeMap[defName] = def->resultType;
-		
+
 		switch(def->resultType) {
 			case VariableType::BOOL:
 				setBool(defName, static_cast<bool>(val));

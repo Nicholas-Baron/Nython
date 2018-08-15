@@ -27,7 +27,6 @@ inline void setTimer() {
 #endif
 }
 
-
 std::vector<std::string> loadedProgram;
 Parser parseTree;
 ActionTree actions;
@@ -36,7 +35,6 @@ bool loaded = false, parsed = false, formedActions = false;
 
 //Ensure a valid user inputted location
 std::string getFileLocation() {
-
 	std::string fileLoc;
 	std::cout << "Enter a file to load: ";
 	std::cin >> fileLoc;
@@ -51,7 +49,6 @@ std::string getFileLocation() {
 }
 
 inline void loadProgram() {
-
 	const auto progLoc = getFileLocation();
 
 	setTimer();
@@ -96,7 +93,7 @@ inline void parse() {
 	for(const auto& item : tokenList) { tokenSize += sizeof(item); }
 	std::cout << "Size of Token List: " << tokenSize << " bytes" << std::endl;
 #endif
-	
+
 	parseTree = Parser(tokenList);
 
 #if TIMING
@@ -115,7 +112,6 @@ inline void parse() {
 }
 
 void formActionTrees() {
-
 	if(!parsed) {
 		parse();
 	}
@@ -137,7 +133,6 @@ void formActionTrees() {
 }
 
 void showTokens() {
-
 	if(!loaded) {
 		loadProgram();
 	}
@@ -148,7 +143,6 @@ void showTokens() {
 }
 
 void showParseTrees() {
-
 	if(!parsed) {
 		parse();
 	}
@@ -161,7 +155,6 @@ void showParseTrees() {
 }
 
 void showActionTrees() {
-
 	if(!parsed) {
 		parse();
 	}
@@ -178,11 +171,10 @@ void showActionTrees() {
 }
 
 void runProgram() {
-
 	if(!parsed) {
 		parse();
 	}
-	
+
 	if(!formedActions) {
 		formActionTrees();
 	}
@@ -205,7 +197,6 @@ void runProgram() {
 }
 
 int main() {
-
 	unsigned option;
 
 	do {
@@ -242,7 +233,6 @@ int main() {
 			case 0: break; //Jumps over everything
 		}
 		std::cout << std::endl;
-
 	} while(option != 0);
 	return option;
 }

@@ -1,7 +1,6 @@
 #include "Program.h"
 
 VariableType StackFrame::getTypeOf(const std::string & name) const {
-
 	if(typeMap.find(name) == typeMap.end()) {
 		return VariableType::VOID;
 	}
@@ -64,7 +63,6 @@ FunctionReturn Program::processCall(Action* call) {
 		} else if(funcName == "print") {
 			std::cout << doAction(call->children[0]);
 		} else if(Keywords::isFuncEnd(call->tok)) {
-
 			//std::cout << "[DEBUG] Returning from a function." << std::endl;
 
 			currentExecution.top().second = true;
@@ -156,14 +154,12 @@ FunctionReturn processLiteral(Action* value) {
 }
 
 FunctionReturn Program::processOperator(Action* call) {
-
 	FunctionReturn toRet;
 	if(call->children.size() == 2) {
 		const auto left = call->children[0], right = call->children[1];
 
 		//Assignment
 		if(Keywords::isAssignment(call->tok)) {
-
 			toRet.type = VariableType::VOID;
 			bool success = false;
 			if(!Keywords::isAssignAfterOp(call->tok)) {
@@ -173,25 +169,25 @@ FunctionReturn Program::processOperator(Action* call) {
 				const char op[] = {call->tok->text[0], '\0'};
 				const auto resLeft = doAction(left);
 				const auto resRight = doAction(right);
-				
+
 				//Is math operation
 				switch(left->resultType) {
 					case VariableType::INT: {
 						int tempI = Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight));
-						success = currentFrame().setVariable(left, FunctionReturn{VariableType::INT, new int{tempI}}); 
+						success = currentFrame().setVariable(left, FunctionReturn{VariableType::INT, new int{tempI}});
 					}
-						break;
+											break;
 					case VariableType::FLOAT: {
 						float tempF = Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight));
-						success = currentFrame().setVariable(left, FunctionReturn{VariableType::FLOAT, new float{tempF}}); 
+						success = currentFrame().setVariable(left, FunctionReturn{VariableType::FLOAT, new float{tempF}});
 					}
-						break;
+											  break;
 					default:
 						std::cerr << "Unsupported math operation!" << std::endl;
 						break;
 				}
 			}
-			
+
 			if(!success) {
 				std::cerr << "[ERR] Failed to set " << left->tok->text << " to " << right->tok->text << std::endl;
 			}
@@ -204,7 +200,6 @@ FunctionReturn Program::processOperator(Action* call) {
 
 			//True/False
 			if(Keywords::isBoolOp(call->tok)) {
-
 				toRet.type = VariableType::BOOL;
 
 				if(resLeft.type == VariableType::INT) {
@@ -242,23 +237,18 @@ FunctionReturn Program::processOperator(Action* call) {
 						std::cerr << "Unsupported math operation!" << std::endl;
 						break;
 				}
-
 			}
 		}
 	} else if(Keywords::isUnaryOp(call->tok) && call->children.size() == 1) {
-
 		auto var = call->children[0];
 		const auto& varName = call->children[0]->tok->text;
 
 		if(var->resultType == VariableType::BOOL && Keywords::isBoolOp(call->tok)) {
-
 			auto val = static_cast<bool>(doAction(var));
 			Keywords::opUnary(call->tok->text, val);
 			toRet.type = VariableType::BOOL;
 			toRet.location = new bool(val);
-
 		} else if(var->type == ActionType::VARIABLE && Keywords::canUseIncre(var->resultType) && currentFrame().getTypeOf(varName) == var->resultType) {
-
 			toRet.type = var->resultType;
 
 			if(var->resultType == VariableType::INT) {
@@ -279,7 +269,6 @@ FunctionReturn Program::processOperator(Action* call) {
 }
 
 FunctionReturn Program::processVariable(Action * var) {
-
 	FunctionReturn toRet{var->resultType};
 
 	switch(toRet.type) {
@@ -298,7 +287,6 @@ FunctionReturn Program::processVariable(Action * var) {
 }
 
 FunctionReturn Program::processDecision(Action * call) {
-
 	if(!Keywords::isConditionalStart(call->tok) && Keywords::isEndOfConditional(call->tok)) {
 		return doAction(call->children[0]);
 	}
@@ -315,7 +303,6 @@ FunctionReturn Program::processDecision(Action * call) {
 }
 
 FunctionReturn Program::doAction(Action* tree) {
-
 	if(!tree->hasChildren()) {
 		switch(tree->type) {
 			case ActionType::CALL:
@@ -358,7 +345,6 @@ FunctionReturn Program::doAction(Action* tree) {
 }
 
 FunctionReturn Program::run(const std::string & funcName, StackFrame params) {
-
 	unsigned startLoc = 0;
 	auto func = findTree(funcName, startLoc);
 
@@ -401,11 +387,9 @@ std::ostream & operator<<(std::ostream & lhs, const FunctionReturn & rhs) {
 }
 
 std::ostream& operator<<(std::ostream& lhs, const StackFrame& rhs) {
-
 	auto vars = rhs.currentVariables();
 
 	for(const auto& var : vars) {
-
 		lhs << std::endl << var.first << " : ";
 
 		switch(var.second) {
