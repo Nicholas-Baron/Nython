@@ -3,16 +3,17 @@
 #include <iostream>
 #include <iomanip>
 
+//Moving these two to the class requires moving all functions in this file into the class as well
 Action* parseNode(Node* n, bool& finished, DefinitonList& definitions);
 Action* parseCall(Node* line, bool& finished, DefinitonList& defs);
-
-unsigned conditionalLvl = 0;
 
 Action* parseCommand(Node* line, bool& finished, DefinitonList& defs) {
 	Action* current = new Action;
 	current->tok = line->token;
 	current->type = CALL;
 	current->resultType = VariableType::VOID;
+
+	static unsigned conditionalLvl = 0;
 	if(Keywords::isConditionalStart(line->token)) {
 		current->type = DECISION;
 		conditionalLvl++;
@@ -127,7 +128,7 @@ Action* parseNode(Node* n, bool& finished, DefinitonList& defs) {
 		toRet = new Action;
 		toRet->tok = n->token;
 		toRet->type = LITVAL;
-		toRet->resultType = Keywords::bestFit(*(n->token));
+		toRet->resultType = Keywords::bestFit(n->token);
 	}
 
 	return toRet;

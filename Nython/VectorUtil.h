@@ -17,11 +17,6 @@ std::ostream& operator<<(std::ostream& lhs, std::vector<T> list) {
 
 namespace VectorUtil {
 	template<class T>
-	bool contains(const std::vector<T>& list, T find) {
-		return position(list, find) != -1;
-	}
-
-	template<class T>
 	int position(const std::vector<T>& list, T find) {
 		int pos = -1;
 		for(unsigned i = 0; i < list.size(); i++) {
@@ -30,6 +25,11 @@ namespace VectorUtil {
 			}
 		}
 		return pos;
+	}
+
+	template<class T>
+	inline bool contains(const std::vector<T>& list, T find) {
+		return position(list, find) != -1;
 	}
 }
 #endif

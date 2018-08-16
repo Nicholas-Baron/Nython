@@ -6,8 +6,9 @@
 #include <iostream>
 #include <string>
 
-#include <chrono>
+#include <chrono> //For timing
 
+//Macros that can not be changed to constexpr
 #define TIMING 0
 #define SIZING 0
 
@@ -27,6 +28,7 @@ inline void setTimer() {
 #endif
 }
 
+std::string programName;
 std::vector<std::string> loadedProgram;
 Parser parseTree;
 ActionTree actions;
@@ -48,11 +50,11 @@ std::string getFileLocation() {
 	return fileLoc;
 }
 
-inline void loadProgram() {
-	const auto progLoc = getFileLocation();
+void loadProgram() {
+	programName = getFileLocation();
 
 	setTimer();
-	loadedProgram = Loader::fileContents(progLoc);
+	loadedProgram = Loader::fileContents(programName);
 
 #if TIMING
 	using namespace std::chrono;
@@ -72,7 +74,7 @@ inline void loadProgram() {
 	formedActions = false;
 }
 
-inline void parse() {
+void parse() {
 	if(!loaded) {
 		loadProgram();
 	}
@@ -137,7 +139,8 @@ void showTokens() {
 		loadProgram();
 	}
 
-	for(const auto token : Loader::tokens(loadedProgram)) {
+	std::cout << "Tokens for " << programName << std::endl;
+	for(const auto& token : Loader::tokens(loadedProgram)) {
 		std::cout << *token << std::endl;
 	}
 }
@@ -147,6 +150,7 @@ void showParseTrees() {
 		parse();
 	}
 
+	std::cout << "Parse Trees for " << programName << std::endl;
 	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
 		Parser::readNode(parseTree.parsedTokens()[i]);
 		std::cout << " Line #" << i << std::endl;
@@ -155,14 +159,11 @@ void showParseTrees() {
 }
 
 void showActionTrees() {
-	if(!parsed) {
-		parse();
-	}
-
 	if(!formedActions) {
 		formActionTrees();
 	}
 
+	std::cout << "Action Trees for " << programName << std::endl;
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
 		std::cout << "Action Set #" << i << std::endl;
 		actions.printActionTree(actions.actionList()[i]);
@@ -171,15 +172,11 @@ void showActionTrees() {
 }
 
 void runProgram() {
-	if(!parsed) {
-		parse();
-	}
-
 	if(!formedActions) {
 		formActionTrees();
 	}
 
-	std::cout << std::endl;
+	std::cout << "Running " << programName << std::endl;
 	Program prog(actions);
 	auto ret = prog.run("main");
 	std::cout << std::endl;

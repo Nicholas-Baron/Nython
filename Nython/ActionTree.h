@@ -35,6 +35,7 @@ class ActionTree {
 private:
 	std::vector<Action*> actions;
 	DefinitonList definedItems;
+
 public:
 	void writeActionTreeList(const Parser& parsed);
 	inline std::vector<Action*> actionList() const { return actions; }

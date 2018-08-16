@@ -2,18 +2,13 @@
 
 #include <algorithm>
 
-//TODO: move these into the class
-void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos);
-void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next);
-void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end, bool multiLine);
-void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next);
-Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast);
-
 Node* createNode(Token* t) {
 	Node* toRet = new Node;
 	toRet->token = t;
 	return toRet;
 }
+
+#define TOKEN_LIST const std::vector<Token*>& tokenList
 
 unsigned nextOfType(TOKEN_LIST, unsigned start, TokenType type, bool walkBackwards = false) {
 	unsigned toRet = start;
@@ -119,12 +114,14 @@ Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
 	return toRet;
 }
 
-void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
+#undef TOKEN_LIST
+
+void Parser::parseOperator(Node* addTo, unsigned& pos) {
 	auto isBin = Keywords::isBinaryOp(tokenList[pos]);
 	auto leftLoc = nextOfType(tokenList, pos, TokenType::IDENTIFIER, true);
 
 	auto prevNode = !Keywords::isAssignment(addTo->token) && tokenList[pos - 1]->type == TokenType::DELINEATOR
-		? parseToken(tokenList, tokenList[leftLoc], leftLoc, tokenList[leftLoc + 1], false)
+		? parseToken(tokenList[leftLoc], leftLoc, tokenList[leftLoc + 1], false)
 		: createNode(tokenList[leftLoc]);
 
 	if(isBin) {
@@ -135,7 +132,7 @@ void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 		if(nextOfType(tokenList, pos, TokenType::TYPE) > nextOp && nextOfType(tokenList, pos, TokenType::COMMAND) > nextOp
 		   && tokenList[pos + 2]->type == TokenType::OPERATOR) {
 			nextNode = createNode(tokenList[nextOp]);
-			parseOperator(tokenList, nextNode, nextOp);
+			parseOperator(nextNode, nextOp);
 			nextOpUsed = true;
 		} else {
 			nextNode = createNode(tokenList[pos + 1]);
@@ -147,7 +144,7 @@ void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 
 		if(Keywords::isFirstOfPairDelin(tokenList[pos + 2])) {
 			pos++;
-			parseIdentifier(tokenList, nextNode, pos, tokenList[pos + 1]);
+			parseIdentifier(nextNode, pos, tokenList[pos + 1]);
 		}
 
 		addTo->children.push_back(prevNode);
@@ -165,7 +162,7 @@ void parseOperator(TOKEN_LIST, Node* addTo, unsigned& pos) {
 }
 
 //Used for command and method parameters
-void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
+void Parser::parseAfterDelineator(Node* delin, unsigned pos) {
 	unsigned finish = pos + 1;
 	while(tokenList[finish]->type != TokenType::DELINEATOR) {
 		finish++;
@@ -177,16 +174,16 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 
 		if(t->type == TokenType::OPERATOR) {
 			Node* op = createNode(t);
-			parseOperator(tokenList, op, i);
+			parseOperator(op, i);
 			delin->children.push_back(op);
 		} else if(next->type == TokenType::OPERATOR) {
 			i++;
 			Node* op = createNode(next);
-			parseOperator(tokenList, op, i);
+			parseOperator(op, i);
 			delin->children.push_back(op);
 		} else if(t->type == TokenType::IDENTIFIER) {
 			Node* id = createNode(t);
-			parseIdentifier(tokenList, id, i, tokenList[i + 1]);
+			parseIdentifier(id, i, tokenList[i + 1]);
 			delin->children.push_back(id);
 		} else if(t->type == TokenType::LITERAL) {
 			Node* id = createNode(t);
@@ -195,7 +192,7 @@ void parseAfterDelineator(TOKEN_LIST, Node* delin, unsigned pos) {
 	}
 }
 
-void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
+void Parser::parseCommand(Node* comm, unsigned& pos, Token* next) {
 	if(next != nullptr && next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
 		auto endOfPairPos = pos + 2;
 		auto otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPairPos);
@@ -206,7 +203,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 
 			if((current->type == TokenType::DELINEATOR && depth == 0) || Keywords::nonPairedDelin(current)) {
 				const auto delin = createNode(current);
-				parseAfterDelineator(tokenList, delin, j);
+				parseAfterDelineator(delin, j);
 				comm->children.push_back(delin);
 			}
 
@@ -226,7 +223,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			unsigned endLoopPos = pos;
 			Token* endLoop = endOfLoop(tokenList, pos, endLoopPos);
 			pos++;
-			parseSequence(tokenList, delinEnd, pos, endLoopPos, true);
+			parseSequence(delinEnd, pos, endLoopPos, true);
 
 			Node* loopEnd = createNode(endLoop);
 			delinEnd->children.push_back(loopEnd);
@@ -236,14 +233,14 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 			unsigned endIfPos = pos;
 			endOfIf(tokenList, pos, endIfPos);
 			pos++;
-			parseSequence(tokenList, delinEnd, pos, endIfPos, true);
+			parseSequence(delinEnd, pos, endIfPos, true);
 
 			pos = endIfPos - 1;
 		}
 	} else {
 		if(Keywords::needsParameter(comm->token)) {
 			pos++;
-			Node* param = parseToken(tokenList, next, pos, tokenList[pos + 1], pos + 1 == tokenList.size());
+			Node* param = parseToken(next, pos, tokenList[pos + 1], pos + 1 == tokenList.size());
 			comm->children.push_back(param);
 		} else if(Keywords::isFuncEnd(comm->token)) {
 			if(next == nullptr) {
@@ -259,7 +256,7 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 				auto nextType = nextOfType(tokenList, pos, TokenType::TYPE);
 
 				unsigned stop = std::min(nextCmd, nextType);
-				parseSequence(tokenList, comm, pos, stop, false);
+				parseSequence(comm, pos, stop, false);
 				pos = stop;
 			}
 		}
@@ -267,16 +264,16 @@ void parseCommand(TOKEN_LIST, Node* comm, unsigned& pos, Token* next) {
 }
 
 //Reads a sequence of tokens for loops, if-statements, or long returns
-void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end, bool multiLine) {
+void Parser::parseSequence(Node* addTo, unsigned& start, unsigned end, bool multiLine) {
 	auto nextOp = nextOfType(tokenList, start, TokenType::OPERATOR);
 
 	if(nextOp < end && !multiLine) {
 		nextOp--; //Moves it one back
-		auto op = parseToken(tokenList, tokenList[nextOp], nextOp, tokenList[nextOp + 1], nextOp + 1 == end);
+		auto op = parseToken(tokenList[nextOp], nextOp, tokenList[nextOp + 1], nextOp + 1 == end);
 		addTo->children.push_back(op);
 	} else {
 		for(unsigned i = start; i < end; i++) {
-			auto parsed = parseToken(tokenList, tokenList[i], i, tokenList[i + 1], i + 1 == end);
+			auto parsed = parseToken(tokenList[i], i, tokenList[i + 1], i + 1 == end);
 			if(parsed != nullptr) {
 				addTo->children.push_back(parsed);
 			}
@@ -285,7 +282,7 @@ void parseSequence(TOKEN_LIST, Node* addTo, unsigned& start, unsigned end, bool 
 }
 
 //Identifier is either a variable name or method name
-void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
+void Parser::parseIdentifier(Node* id, unsigned& pos, Token* next) {
 	auto prev = tokenList[pos - 1];
 
 	if(prev->type == TokenType::TYPE) {
@@ -301,7 +298,7 @@ void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 		auto nextDelin = nextOfType(tokenList, pos, TokenType::DELINEATOR);
 		while(nextDelin <= endOfPair) {
 			Node* delin = createNode(tokenList[pos]);
-			parseAfterDelineator(tokenList, delin, pos);
+			parseAfterDelineator(delin, pos);
 			id->children.push_back(delin);
 			pos = nextDelin;
 			nextDelin = nextOfType(tokenList, pos, TokenType::DELINEATOR);
@@ -312,19 +309,19 @@ void parseIdentifier(TOKEN_LIST, Node* id, unsigned& pos, Token* next) {
 }
 
 //Parses a single token
-Node* parseToken(TOKEN_LIST, Token* t, unsigned& pos, Token* next, bool isLast) {
+Node* Parser::parseToken(Token* t, unsigned& pos, Token* next, bool isLast) {
 	Node* toRet = NULL;
 
 	if(t->type == TokenType::COMMAND) {
 		toRet = createNode(t);
-		parseCommand(tokenList, toRet, pos, next);
+		parseCommand(toRet, pos, next);
 	} else if(!isLast && next->type == TokenType::OPERATOR) {
 		toRet = createNode(next);
 		pos++;
-		parseOperator(tokenList, toRet, pos);
+		parseOperator(toRet, pos);
 	} else if(t->type == TokenType::IDENTIFIER) {
 		toRet = createNode(t);
-		parseIdentifier(tokenList, toRet, pos, next);
+		parseIdentifier(toRet, pos, next);
 	} else if(t->type == TokenType::LITERAL) {
 		toRet = createNode(t);
 	}
@@ -343,14 +340,14 @@ void Parser::trimRoots() {
 	roots = temp;
 }
 
-Parser::Parser(TOKEN_LIST) {
-	roots = parseTokens(tokenList);
+Parser::Parser(const std::vector<Token*>& tokenList) :tokenList(tokenList) {
+	roots = parseTokens();
 	trimRoots();
 	roots.shrink_to_fit();
 	ready = true;
 }
 
-std::vector<Node*> Parser::parseTokens(TOKEN_LIST) {
+std::vector<Node*> Parser::parseTokens() {
 	std::vector<Node*> branches;
 	for(unsigned i = 0; i < tokenList.size(); i++) {
 		auto t = tokenList[i];
@@ -361,7 +358,7 @@ std::vector<Node*> Parser::parseTokens(TOKEN_LIST) {
 			next = tokenList[i + 1];
 		}
 
-		branches.push_back(parseToken(tokenList, t, i, next, isLast));
+		branches.push_back(parseToken(t, i, next, isLast));
 	}
 	return branches;
 }

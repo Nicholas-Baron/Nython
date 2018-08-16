@@ -55,7 +55,7 @@ public:
 
 	inline static bool isFuncEnd(const Token* tok) { return tok->type == TokenType::COMMAND && (tok->text == "ret" || tok->text == "return"); }
 	//Returns the optimal type for a variable
-	static VariableType bestFit(const Token& tok);
+	static VariableType bestFit(const Token* tok);
 	inline static bool compatibleVarTypes(const VariableType origin, const VariableType dest) {
 		if(origin == dest) {
 			return true;

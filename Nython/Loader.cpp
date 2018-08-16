@@ -95,8 +95,8 @@ std::vector<std::string> Loader::splitIntoTokens(const std::string& str, const s
 
 		auto nextString = str.find('\"', prev);
 		if(nextString < pos) {
-			prev = nextString;
-			pos = str.find('\"', pos) + 1;
+			prev = nextString + 1;
+			pos = str.find('\"', pos);
 		}
 
 		std::string token = str.substr(prev, pos - prev);

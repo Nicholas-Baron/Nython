@@ -143,7 +143,7 @@ FunctionReturn processLiteral(Action* value) {
 			break;
 		case VariableType::STRING:
 			//Cuts off the beginning and ending quote marks
-			toRet.location = new std::string{text.substr(1, text.size() - 2)};
+			toRet.location = new std::string{text};
 			break;
 		default:
 			std::cerr << "Can not get a literal value from " << text << std::endl;

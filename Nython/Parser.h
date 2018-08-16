@@ -3,8 +3,6 @@
 
 #include "Keywords.h"
 
-#define TOKEN_LIST const std::vector<Token*>& tokenList
-
 struct Node {
 	Token* token;
 	std::vector<Node*> children;
@@ -22,12 +20,20 @@ class Parser {
 private:
 	bool ready = false;
 	std::vector<Node*> roots;
+	std::vector<Token*> tokenList;
 
-	std::vector<Node*> parseTokens(TOKEN_LIST);
+	void parseAfterDelineator(Node* delin, unsigned pos);
+	void parseOperator(Node* addTo, unsigned& pos);
+	void parseCommand(Node* comm, unsigned& pos, Token* next);
+	void parseSequence(Node* addTo, unsigned& start, unsigned end, bool multiLine);
+	void parseIdentifier(Node* id, unsigned& pos, Token* next);
+	Node* parseToken(Token* t, unsigned& pos, Token* next, bool isLast);
+	std::vector<Node*> parseTokens();
 	void trimRoots();
+
 public:
 	Parser() {}
-	Parser(TOKEN_LIST);
+	Parser(const std::vector<Token*>& tokenList);
 
 	inline std::vector<Node*> parsedTokens() const { return roots; }
 	inline bool isReady() const { return ready; }

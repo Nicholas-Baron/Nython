@@ -21,20 +21,20 @@ bool Keywords::getBoolFromToken(const Token* value) {
 	return true;
 }
 
-VariableType Keywords::bestFit(const Token & tok) {
-	if(tok.text[0] == '"') {
+VariableType Keywords::bestFit(const Token* tok) {
+	if(tok->text.find_first_of(' ') != std::string::npos) {
 		return VariableType::STRING;
-	} else if(tok.text == "true" || tok.text == "false") {
+	} else if(tok->text == "true" || tok->text == "false") {
 		return VariableType::BOOL;
-	} else if(tok.text.length() == 3 && tok.text[0] == tok.text[2]) {
+	} else if(tok->text.length() == 3 && tok->text[0] == tok->text[2]) {
 		return VariableType::CHAR;
 	}
 
 	bool canBeInt = true, canBeFloat = true, previousDot = false;
-	for(unsigned i = 0; i < tok.text.length(); i++) {
-		if(!isdigit(tok.text[i])) {
+	for(unsigned i = 0; i < tok->text.length(); i++) {
+		if(!isdigit(tok->text[i])) {
 			canBeInt = false;
-			if(tok.text[i] == '.') {
+			if(tok->text[i] == '.') {
 				if(previousDot) {
 					canBeFloat = false;
 				}
@@ -54,8 +54,8 @@ VariableType Keywords::bestFit(const Token & tok) {
 
 TokenType Keywords::getTokenType(const std::string & text) {
 	const auto first_space = text.find_first_of(" ");
-	if(first_space != std::string::npos && text.find_first_of('"') != 0) {
-		throw "Can not get a token with a space in it";
+	if(first_space != std::string::npos) {
+		return TokenType::LITERAL;
 	}
 
 	TokenType type = TokenType::IDENTIFIER;
