@@ -33,7 +33,7 @@ std::vector<std::string> loadedProgram;
 Parser parseTree;
 ActionTree actions;
 
-bool loaded = false, parsed = false, formedActions = false;
+bool loaded = false, parsed = false, formedActions = false, devOptions = false;
 
 //Ensure a valid user inputted location
 std::string getFileLocation() {
@@ -193,41 +193,61 @@ void runProgram() {
 	}
 }
 
+void devOperations(const unsigned option) {
+	switch(option) {
+		case 11:
+			showTokens(); break;
+		case 12:
+			showParseTrees(); break;
+		case 13:
+			showActionTrees(); break;
+		default:
+			std::cout << "Invalid option" << std::endl;
+	}
+}
+
 int main() {
 	unsigned option;
 
 	do {
 		//Main menu
-		std::cout << "Nython v0.0.1b" << std::endl;
+		std::cout << "Nython v0.0.2a (Tools Update)" << std::endl;
 		std::cout << "0. Exit" << std::endl;
 		std::cout << "1. Reserved Word List" << std::endl;
 		std::cout << "2. Load Program" << std::endl;
-		std::cout << "3. Show Token List" << std::endl;
-		std::cout << "4. Show Parser Output" << std::endl;
-		std::cout << "5. Show Action Trees" << std::endl;
-		std::cout << "6. Run Program" << std::endl;
-		std::cout << "7. [Construction Here]" << std::endl;
-
+		std::cout << "3. Run Program" << std::endl;
+		std::cout << "9. Enable Special Tools" << std::endl;
+		
+		if(devOptions) {
+			std::cout << "11. Show Token List" << std::endl;
+			std::cout << "12. Show Parser Output" << std::endl;
+			std::cout << "13. Show Action Trees" << std::endl;
+		} 
+		
 		std::cout << "Select an option: ";
 		std::cin >> option;
 		std::cout << std::endl;
 
-		switch(option) {
-			case 1:
-				Keywords::printKeywords(); break;
-			case 2:
-				loadProgram(); break;
-			case 3:
-				showTokens(); break;
-			case 4:
-				showParseTrees(); break;
-			case 5:
-				showActionTrees(); break;
-			case 6:
-				runProgram(); break;
-			default:
-				std::cout << "Invalid option" << std::endl;
-			case 0: break; //Jumps over everything
+		if(devOptions && option > 10) {
+			devOperations(option);
+		} else {
+			switch(option) {
+				case 1:
+					Keywords::printKeywords(); break;
+				case 2:
+					loadProgram(); break;
+				case 3:
+					runProgram(); break;
+				case 9:
+					unsigned code;
+					std::cout << "Enter the special unlock code: ";
+					std::cin >> code;
+					devOptions = (code == 1999042)?!devOptions:false;
+					break;
+				default:
+					std::cout << "Invalid option" << std::endl;
+				case 0: break; //Jumps over everything
+			}
 		}
 		std::cout << std::endl;
 	} while(option != 0);
