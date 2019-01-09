@@ -204,7 +204,7 @@ class Program {
 	FunctionReturn processDecision(Action* call);
 
 	public:
-	Program(const ActionTree& actTree) : actions(actTree) {}
+	Program(const ActionTree& actTree) noexcept : actions(actTree) {}
 	FunctionReturn run(const std::string& funcName, StackFrame parameters = StackFrame());
 };
 

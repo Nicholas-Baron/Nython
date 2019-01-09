@@ -129,20 +129,26 @@ FunctionReturn Program::processCall(Action* call) {
 	return run(funcName, params);
 }
 
+template<typename T>
+inline T* add_to_heap(T val) {
+	return std::make_unique<T>(val).release();
+}
+
 FunctionReturn processLiteral(const Action * const value) {
 	FunctionReturn toRet{value->resultType};
 
 	const auto& text = value->tok->text;
 	switch(value->resultType) {
 		case VariableType::BOOL:
-			toRet.location = new bool{Keywords::getBoolFromToken(*(value->tok))};
+			toRet.location = add_to_heap(Keywords::getBoolFromToken(*(value->tok)));
 			break;
 		case VariableType::INT:
-			toRet.location = new int{std::stoi(text)};
+		//TODO: Parse hex
+			toRet.location = add_to_heap(std::stoi(text));
 			break;
 		case VariableType::STRING:
 			//Cuts off the beginning and ending quote marks
-			toRet.location = new std::string{text};
+			toRet.location = add_to_heap(text);
 			break;
 		default:
 			std::cerr << "Can not get a literal value from " << text << std::endl;
@@ -174,14 +180,18 @@ FunctionReturn Program::processOperator(Action* call) {
 				switch(left->resultType) {
 					case VariableType::INT:
 					{
-						auto tempI = Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight));
-						success = currentFrame().setVariable(left.get(), FunctionReturn{VariableType::INT, new int{tempI}});
+						const int tempI = Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight));
+						success = currentFrame().setVariable(left.get(), 
+															 FunctionReturn{VariableType::INT, add_to_heap(tempI)}
+															 );
 					}
 					break;
 					case VariableType::FLOAT:
 					{
-						auto tempF = Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight));
-						success = currentFrame().setVariable(left.get(), FunctionReturn{VariableType::FLOAT, new float{tempF}});
+						const float tempF = Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight));
+						success = currentFrame().setVariable(left.get(), 
+															 FunctionReturn{VariableType::FLOAT, add_to_heap(tempF)}
+															 );
 					}
 					break;
 					default:
@@ -208,10 +218,10 @@ FunctionReturn Program::processOperator(Action* call) {
 					const int left_val = static_cast<int>(resLeft);
 					switch(resRight.type) {
 						case VariableType::INT:
-							toRet.location = new bool(Keywords::opTest(op, left_val, static_cast<int>(resRight)));
+							toRet.location = add_to_heap(Keywords::opTest(op, left_val, static_cast<int>(resRight)));
 							break;
 						case VariableType::FLOAT:
-							toRet.location = new bool(Keywords::opTest(op, left_val, static_cast<float>(resRight)));
+							toRet.location = add_to_heap(Keywords::opTest(op, left_val, static_cast<float>(resRight)));
 							break;
 						default:
 							std::cerr << "[ERR] Unsupported comparison!" << std::endl;
@@ -230,10 +240,10 @@ FunctionReturn Program::processOperator(Action* call) {
 
 				switch(preferred) {
 					case VariableType::INT:
-						toRet.location = new int(Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight)));
+						toRet.location = add_to_heap(Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight)));
 						break;
 					case VariableType::FLOAT:
-						toRet.location = new float(Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight)));
+						toRet.location = add_to_heap(Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight)));
 						break;
 					default:
 						std::cerr << "Unsupported math operation!" << std::endl;
@@ -249,19 +259,19 @@ FunctionReturn Program::processOperator(Action* call) {
 			auto val = static_cast<bool>(doAction(var.get()));
 			Keywords::opUnary(call->tok->text, val);
 			toRet.type = VariableType::BOOL;
-			toRet.location = new bool(val);
+			toRet.location = add_to_heap(val);
 		} else if(var->type == ActionType::VARIABLE && Keywords::canUseIncre(var->resultType) && currentFrame().getTypeOf(varName) == var->resultType) {
 			toRet.type = var->resultType;
 
 			if(var->resultType == VariableType::INT) {
 				auto val = currentFrame().intAtID(varName);
 				Keywords::opUnary(call->tok->text, val);
-				toRet.location = new int(val);
+				toRet.location = add_to_heap(val);
 				currentFrame().setInt(varName, val);
 			} else if(var->resultType == VariableType::FLOAT) {
 				auto val = currentFrame().floatAtID(varName);
 				Keywords::opUnary(call->tok->text, val);
-				toRet.location = new float(val);
+				toRet.location = add_to_heap(val);
 				currentFrame().setFloat(varName, val);
 			}
 		}
@@ -275,10 +285,10 @@ FunctionReturn Program::processVariable(const Action * const var) {
 
 	switch(toRet.type) {
 		case VariableType::INT:
-			toRet.location = new int(currentFrame().intAtID(var->tok->text));
+			toRet.location = add_to_heap(currentFrame().intAtID(var->tok->text));
 			break;
 		case VariableType::FLOAT:
-			toRet.location = new float(currentFrame().floatAtID(var->tok->text));
+			toRet.location = add_to_heap(currentFrame().floatAtID(var->tok->text));
 			break;
 		default:
 			std::cerr << "[ERR] Unimplemented variable type used!" << std::endl;
@@ -292,14 +302,14 @@ FunctionReturn Program::processDecision(Action * call) {
 	if(call == nullptr) {
 		std::cerr << "A null action was given for a decision! Returning false"
 			<< std::endl;
-		return FunctionReturn{VariableType::BOOL, new bool(false)};
+		return FunctionReturn{VariableType::BOOL, add_to_heap(false)};
 	}
 
 	if(!Keywords::isConditionalStart(call->tok.get()) && Keywords::isEndOfConditional(*(call->tok))) {
 		return doAction(call->children.front().get());
 	}
 
-	const bool result = static_cast<bool>(doAction(call->children.at(0).get()));
+	const bool result = static_cast<bool>(doAction(call->children.front().get()));
 
 	if(result && Keywords::isConditionalStart(call->tok.get()) && !Keywords::isEndOfConditional(*(call->tok))) {
 		return doAction(call->children.at(1).get());
@@ -307,7 +317,7 @@ FunctionReturn Program::processDecision(Action * call) {
 		return doAction(call->children.at(1).get());
 	}
 
-	return FunctionReturn{VariableType::BOOL, new bool(false)};
+	return FunctionReturn{VariableType::BOOL, add_to_heap(false)};
 }
 
 FunctionReturn Program::doAction(Action* tree) {
@@ -335,7 +345,7 @@ FunctionReturn Program::doAction(Action* tree) {
 			return processOperator(tree);
 		case ActionType::DEFINITION:
 			FunctionReturn toRet;
-			for(auto& child : tree->children) {
+			for(const auto& child : tree->children) {
 				if(child->type != ActionType::DEFINITION && !currentExecution.top().second) {
 					toRet = doAction(child.get());
 				}

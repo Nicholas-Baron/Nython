@@ -17,22 +17,26 @@ Great code btw, I see alot of the design patterns in this code that the enterpri
 //This struct holds all data we know about a loaded program
 struct LoadedProgram {
 	std::string name;
+	std::vector<std::string> source;
 	Parser parseTree;
 	ActionTree actions;
-	std::vector<std::string> source;
 
-	LoadedProgram(const std::string& name_in) : name(name_in) {
-		source = Loader::fileContents(name);
-		parseTree = Parser(Loader::tokens(source));
+	LoadedProgram(const std::string& name_in)
+		: name(name_in), source(Loader::fileContents(name_in)), parseTree(Loader::tokens(source)) {
 		actions.writeActionTreeList(parseTree);
 	}
 
 	size_t mem_footprint() const {
-		size_t toRet = sizeof(*this);
+		size_t toRet = sizeof(*this) + sizeof(program());
 		for(const auto& line : source) {
 			toRet += sizeof(line);
 		}
 		return toRet + parseTree.memFootprint() + actions.memFootprint();
+	}
+
+	inline Program& program() const noexcept {
+		static Program prog(actions);
+		return prog;
 	}
 };
 
@@ -92,8 +96,7 @@ void showActionTrees(const LoadedProgram& program) {
 void runProgram(const LoadedProgram& program) {
 	std::cout << "Running " << program.name << std::endl;
 
-	Program prog(program.actions);
-	const auto ret = prog.run("main");
+	const auto ret = program.program().run("main");
 	std::cout << std::endl;
 
 	switch(ret.type) {
@@ -110,16 +113,28 @@ void runProgram(const LoadedProgram& program) {
 }
 
 int main(int arg_count, const char * const * const args) {
-	//If an argument is given, run the program with a name of that argument
+	std::unordered_map<std::string, LoadedProgram> ready_programs;
+
+	//If arguments are given, run the programs named by the arguments
 	if(arg_count > 1) {
-		assert(arg_count == 2);
+		for(int i = 1; i < arg_count; i++) {
 #pragma warning(suppress: 26481) //Stops Microsoft from asking about span
-		LoadedProgram program(args[1]);
-		runProgram(program);
-		return 0; // MAYBE: load multiple programs and run sequentially
+			if(Loader::isValidFile(args[i])) {
+#pragma warning(suppress: 26481)
+				ready_programs.insert(std::pair(args[i], LoadedProgram(args[i])));
+			} else {
+#pragma warning(suppress: 26481)
+				std::cerr << "Could not find " << args[i] << std::endl;
+			}
+		}
+
+		for(const auto& pair : ready_programs) {
+			runProgram(pair.second);
+		}
+
+		return 0;
 	}
 
-	std::unordered_map<std::string, LoadedProgram> ready_programs;
 	std::string current_program;
 
 	bool devOptions = false;
@@ -179,7 +194,12 @@ int main(int arg_count, const char * const * const args) {
 					ready_programs.insert(std::make_pair(current_program, LoadedProgram(current_program)));
 					break;
 				case 3:
-					runProgram(ready_programs.at(current_program)); break;
+					if(current_program.empty()) {
+						current_program = getFileLocation();
+						ready_programs.insert(std::make_pair(current_program, LoadedProgram(current_program)));
+					}
+					runProgram(ready_programs.at(current_program));
+					break;
 				case 9: {
 					using std::cin, std::cout;
 					unsigned code = 0;

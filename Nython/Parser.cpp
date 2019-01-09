@@ -4,8 +4,9 @@
 #include <cassert>
 #include <memory>
 
-inline std::shared_ptr<Node> createNode(const std::shared_ptr<const Token>& t) {
-	return std::make_shared<Node>(t);
+//Needs to be a value copy for the move
+inline std::shared_ptr<Node> createNode(std::shared_ptr<const Token> t) {
+	return std::make_shared<Node>(std::move(t));
 }
 
 using TOKEN_LIST = const std::vector<std::shared_ptr<const Token>>&;

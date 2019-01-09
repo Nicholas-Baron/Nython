@@ -1,4 +1,4 @@
-float bsqrt(float val| int iter)
+float bsqrt(float val | int iter)
 	float guess = val / 2
 	repeat(int i = 0|i<iter|i++)
 		float temp = val / guess
