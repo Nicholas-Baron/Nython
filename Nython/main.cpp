@@ -3,37 +3,21 @@
 #include "ActionTree.hpp"
 #include "Program.hpp"
 
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <string>
-
-#include <chrono> //For timing
-
-//Macros that can not be changed to constexpr
-#define TIMING 0
-#define SIZING 0
 
 /*
 Maybe add some documentation so other people can understand what each function does.
 Great code btw, I see alot of the design patterns in this code that the enterprise lecture talked about, good stuff.
 */
 
-#if TIMING
-using millif = std::chrono::duration<float, std::milli>;
-auto start = std::chrono::high_resolution_clock::now();
-#endif
-
-inline void setTimer() {
-#if TIMING
-	start = std::chrono::high_resolution_clock::now();
-#endif
-}
-
-std::string programName;
-std::vector<std::string> loadedProgram;
 Parser parseTree;
 ActionTree actions;
 
-bool loaded = false, parsed = false, formedActions = false, devOptions = false;
+bool loaded = false, parsed = false, formedActions = false, 
+devOptions = false, showSize = false;
 
 //Ensure a valid user inputted location
 std::string getFileLocation() {
@@ -50,136 +34,117 @@ std::string getFileLocation() {
 	return fileLoc;
 }
 
-void loadProgram() {
-	programName = getFileLocation();
+std::vector<std::string> loadProgram(const std::string& programName) {
+	
+	std::vector<std::string> loadedProgram = Loader::fileContents(programName);
 
-	setTimer();
-	loadedProgram = Loader::fileContents(programName);
-
-#if TIMING
-	using namespace std::chrono;
-	auto loadingTime = high_resolution_clock::now() - start;
-	std::cout << "Loading program took " << duration_cast<millif>(loadingTime).count() << "ms" << std::endl;
-	setTimer();
-#endif
-
-#if SIZING
+if(showSize){
 	auto loadedSize = sizeof(loadedProgram);
 	for(const auto& item : loadedProgram) { loadedSize += sizeof(item); }
 	std::cout << "Size of Loaded Program: " << loadedSize << " bytes" << std::endl;
-#endif
+}
 
 	loaded = true;
 	parsed = false;
 	formedActions = false;
+
+	return loadedProgram;
 }
 
-void parse() {
+void parse(std::string& programName, std::vector<std::string>& loadedProgram) {
+	
 	if(!loaded) {
-		loadProgram();
+		if(programName.empty()) { programName = getFileLocation(); }
+		loadedProgram = loadProgram(programName);
 	}
-
-	setTimer();
 
 	const auto tokenList = Loader::tokens(loadedProgram);
 
-#if TIMING
-	using namespace std::chrono;
-	auto tokeningTime = high_resolution_clock::now() - start;
-	std::cout << "Tokenizing the program took " << duration_cast<millif>(tokeningTime).count() << "ms" << std::endl;
-	setTimer();
-#endif
-
-#if SIZING
+if(showSize){
 	auto tokenSize = sizeof(tokenList);
 	for(const auto& item : tokenList) { tokenSize += sizeof(item); }
 	std::cout << "Size of Token List: " << tokenSize << " bytes" << std::endl;
-#endif
+}
 
 	parseTree = Parser(tokenList);
 
-#if TIMING
-	using namespace std::chrono;
-	auto parsingTime = high_resolution_clock::now() - start;
-	std::cout << "Parsing the program took " << duration_cast<millif>(parsingTime).count() << "ms" << std::endl;
-	setTimer();
-#endif
-
-#if SIZING
+	if(showSize) {
 	std::cout << "Size of Parse Tree: " << parseTree.memFootprint() << " bytes" << std::endl;
-#endif
+}
 
 	parsed = true;
 	formedActions = false;
 }
 
-void formActionTrees() {
+void formActionTrees(std::string& programName, std::vector<std::string>& loadedProgram) {
 	if(!parsed) {
-		parse();
+		parse(programName, loadedProgram);
 	}
 
 	actions.writeActionTreeList(parseTree);
 
-#if TIMING
-	using namespace std::chrono;
-	auto loadingTime = high_resolution_clock::now() - start;
-	std::cout << "Writing the action trees took " << duration_cast<millif>(loadingTime).count() << "ms" << std::endl;
-	setTimer();
-#endif
-
-#if SIZING
+	if(showSize) {
 	std::cout << "Size of Action: " << actions.memFootprint() << " bytes" << std::endl;
-#endif
+}
 
 	formedActions = true;
 }
 
-void showTokens() {
+void showTokens(const std::vector<std::string>& loadedProgram) {
+	
 	if(!loaded) {
-		loadProgram();
+		throw std::logic_error("Did not load the program");
 	}
 
-	std::cout << "Tokens for " << programName << std::endl;
+	//std::cout << "Tokens for " << programName << std::endl;
 	for(const auto& token : Loader::tokens(loadedProgram)) {
 		std::cout << *token << std::endl;
 	}
 }
 
-void showParseTrees() {
+void showParseTrees(std::string& programName, std::vector<std::string>& loadedProgram) {
+	
 	if(!parsed) {
-		parse();
+		parse(programName, loadedProgram);
 	}
 
 	std::cout << "Parse Trees for " << programName << std::endl;
-	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
-		Parser::readNode(parseTree.parsedTokens()[i].get());
-		std::cout << " Line #" << i << std::endl;
-	}
+	size_t i = 0;
+	std::for_each(parseTree.parsedTokens().begin(), parseTree.parsedTokens().end(), 
+				  [&](const std::shared_ptr<Node>& val) -> void {
+		              Parser::readNode(val.get());
+		              std::cout << " Line #" << i++ << std::endl;
+	              }
+	);
 	std::cout << std::endl;
 }
 
-void showActionTrees() {
+void showActionTrees(std::string& programName, std::vector<std::string>& loadedProgram) {
+	
 	if(!formedActions) {
-		formActionTrees();
+		formActionTrees(programName, loadedProgram);
 	}
 
-	std::cout << "Action Trees for " << programName << std::endl;
+	//std::cout << "Action Trees for " << programName << std::endl;
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
 		std::cout << "Action Set #" << i << std::endl;
-		actions.printActionTree(actions.actionList().at(i));
+		actions.printActionTree(actions.actionList().at(i).get());
 	}
 	std::cout << std::endl;
 }
 
-void runProgram() {
+void runProgram(std::string& programName, std::vector<std::string>& loadedProgram) {
+	
 	if(!formedActions) {
-		formActionTrees();
+		formActionTrees(programName, loadedProgram);
 	}
 
 	std::cout << "Running " << programName << std::endl;
+	
 	Program prog(actions);
-	auto ret = prog.run("main");
+	const auto ret = prog.run("main");
 	std::cout << std::endl;
+	
 	switch(ret.type) {
 		case VariableType::INT:
 			std::cout << "Main returned " << static_cast<int>(ret) << std::endl;
@@ -193,25 +158,27 @@ void runProgram() {
 	}
 }
 
-void devOperations(const unsigned option) {
-	switch(option) {
-		case 11:
-			showTokens(); break;
-		case 12:
-			showParseTrees(); break;
-		case 13:
-			showActionTrees(); break;
-		default:
-			std::cout << "Invalid option" << std::endl;
-	}
-}
+//TODO: struct LoadedProgram{}
 
-int main() {
-	unsigned option;
+int main(int arg_count, const char * const * const args) {
+	
+	std::string programName;
+	std::vector<std::string> loadedProgram;
+	
+	//If an argument is given, run the program with a name of that argument
+	if(arg_count > 1){
+		assert(arg_count == 2);
+		programName = args[1];
+		loadedProgram = loadProgram(programName);
+		runProgram(programName, loadedProgram);
+		return 0;
+	}
+
+	unsigned option = 0;
 
 	do {
 		//Main menu
-		std::cout << "Nython v0.0.2a (Tools Update)" << std::endl;
+		std::cout << "Nython v0.0.3a" << std::endl;
 		std::cout << "0. Exit" << std::endl;
 		std::cout << "1. Reserved Word List" << std::endl;
 		std::cout << "2. Load Program" << std::endl;
@@ -222,6 +189,7 @@ int main() {
 			std::cout << "11. Show Token List" << std::endl;
 			std::cout << "12. Show Parser Output" << std::endl;
 			std::cout << "13. Show Action Trees" << std::endl;
+			std::cout << "14. Toggle Show Memory Footprint" << std::endl;
 		}
 
 		std::cout << "Select an option: ";
@@ -229,15 +197,27 @@ int main() {
 		std::cout << std::endl;
 
 		if(devOptions && option > 10) {
-			devOperations(option);
+			switch(option) {
+				case 11:
+					showTokens(loadedProgram); break;
+				case 12:
+					showParseTrees(programName, loadedProgram); break;
+				case 13:
+					showActionTrees(programName, loadedProgram); break;
+				case 14:
+					showSize = !showSize; break;
+				default:
+					std::cout << "Invalid option" << std::endl;
+			}
 		} else {
 			switch(option) {
 				case 1:
 					Keywords::printKeywords(); break;
 				case 2:
-					loadProgram(); break;
+					programName = getFileLocation();
+					loadedProgram = loadProgram(programName); break;
 				case 3:
-					runProgram(); break;
+					runProgram(programName, loadedProgram); break;
 				case 9:
 					unsigned code;
 					std::cout << "Enter the special unlock code: ";
@@ -251,5 +231,5 @@ int main() {
 		}
 		std::cout << std::endl;
 	} while(option != 0);
-	return option;
+	
 }
