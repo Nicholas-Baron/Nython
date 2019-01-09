@@ -27,13 +27,13 @@ namespace Keywords {
 
 	bool getBoolFromToken(const Token& value) {
 		std::string lowered(value.text);
-		
+
 		{
 			using namespace std;
 			static const locale loc;
 			use_facet< ctype<char> >(loc).tolower(&lowered.front(), &lowered.back());
 		}
-		
+
 		if(lowered == "true" || lowered == "1") {
 			return true;
 		} else if(lowered == "false" || lowered == "0") {
@@ -120,10 +120,9 @@ namespace Keywords {
 		std::cout << "Variable Types: " << types << std::endl;
 	}
 
-   static constexpr std::string_view whitespace = " \t\n\v\r\f";
+	static constexpr std::string_view whitespace = " \t\n\v\r\f";
 
 	int opMath(const std::string & op, int left, int right) {
-		
 		const char op_char = op.at(op.find_first_not_of(whitespace));
 		if(op_char == '+') {
 			return left + right;
@@ -142,7 +141,6 @@ namespace Keywords {
 	}
 
 	float opMath(const std::string & op, float left, float right) {
-		
 		const char op_char = op.at(op.find_first_not_of(whitespace));
 		if(op_char == '+') {
 			return left + right;

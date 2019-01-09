@@ -311,7 +311,6 @@ FunctionReturn Program::processDecision(Action * call) {
 }
 
 FunctionReturn Program::doAction(Action* tree) {
-	
 	assert(tree != nullptr);
 	if(!tree->hasChildren()) {
 		switch(tree->type) {

@@ -40,10 +40,10 @@ void Parser::readNode(Node* root, int depth) {
 		std::cout << "[" << depth << "]" << *(root->token) << " ";
 
 		if(root->children.size() >= 1) {
-			std::for_each(root->children.begin(), root->children.end(), 
-				[depth](auto iter){
-					readNode(iter.get(), depth + 1);
-				});
+			std::for_each(root->children.begin(), root->children.end(),
+						  [depth](auto iter) {
+							readNode(iter.get(), depth + 1);
+			});
 		}
 	}
 }
@@ -190,10 +190,9 @@ void Parser::parseAfterDelineator(Node* delin, unsigned pos) {
 }
 
 void Parser::parseCommand(Node* comm, unsigned& pos, bool isLast) {
-	
-	if(!isLast && tokenList.at(pos + 1) != nullptr 
-	&& tokenList.at(pos + 1)->type == TokenType::DELINEATOR 
-	&& Keywords::isFirstOfPairDelin(*tokenList.at(pos + 1))) {
+	if(!isLast && tokenList.at(pos + 1) != nullptr
+	   && tokenList.at(pos + 1)->type == TokenType::DELINEATOR
+	   && Keywords::isFirstOfPairDelin(*tokenList.at(pos + 1))) {
 		unsigned endOfPairPos = pos + 2;
 		auto otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPairPos);
 
@@ -238,21 +237,18 @@ void Parser::parseCommand(Node* comm, unsigned& pos, bool isLast) {
 			pos = endIfPos - 1;
 		}
 	} else {
-		
 		if(Keywords::needsParameter(comm->token.get())) {
-			
 			auto& next = tokenList.at(pos + 1);
 			assert(next != nullptr);
 			pos++;
-			
+
 			auto local_next = std::make_shared<const Token>(*next);
 			auto param = parseToken(local_next, pos, pos + 1 == tokenList.size());
 			comm->children.push_back(param);
 		} else if(Keywords::isFuncEnd(comm->token.get())) {
-			
-			try{
+			try {
 				auto& next = tokenList.at(pos + 1);
-			
+
 				if(isLast || next == nullptr) {
 					//A blank return (ends a void function)
 					return;
@@ -269,7 +265,7 @@ void Parser::parseCommand(Node* comm, unsigned& pos, bool isLast) {
 					parseSequence(comm, pos, stop, false);
 					pos = stop;
 				}
-			}catch(...){
+			} catch(...) {
 				return;
 			}
 		}
@@ -296,7 +292,6 @@ void Parser::parseSequence(Node* addTo, unsigned start, unsigned end, bool multi
 
 //Identifier is either a variable name or method name
 void Parser::parseIdentifier(Node* id, unsigned& pos, const Token* next) {
-	
 	assert(next != nullptr);
 	assert(id != nullptr);
 
@@ -308,7 +303,7 @@ void Parser::parseIdentifier(Node* id, unsigned& pos, const Token* next) {
 
 	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(*next)) {
 		//This is a function call
-		
+
 		unsigned endOfPair = pos + 2;
 		pos++;
 		otherEndOfPair(tokenList, pos, endOfPair);
@@ -333,14 +328,14 @@ std::shared_ptr<Node> Parser::parseToken(const std::shared_ptr<const Token>& t, 
 	assert(*tokenList.at(pos) == *t);
 
 	std::shared_ptr<Node> toRet;
-	
+
 	if(!isLast && tokenList.at(pos + 1)->type == TokenType::OPERATOR) {
 		toRet = createNode(tokenList.at(pos + 1));
 		pos++;
 		parseOperator(toRet.get(), pos);
 		return toRet;
 	}
-	
+
 	switch(t->type) {
 		case TokenType::LITERAL:
 			return createNode(t);
@@ -351,7 +346,7 @@ std::shared_ptr<Node> Parser::parseToken(const std::shared_ptr<const Token>& t, 
 		case TokenType::COMMAND:
 			toRet = createNode(t);
 			parseCommand(toRet.get(), pos, isLast);
-			return toRet;	   
+			return toRet;
 		default:
 			break;
 	}
@@ -361,13 +356,13 @@ std::shared_ptr<Node> Parser::parseToken(const std::shared_ptr<const Token>& t, 
 
 void Parser::trimRoots() {
 	std::vector<std::shared_ptr<Node>> temp;
-	
-	/*std::copy_if(roots.begin(), roots.end(), temp.begin(), 
+
+	/*std::copy_if(roots.begin(), roots.end(), temp.begin(),
 				  [ ](const std::shared_ptr<Node>& iter) noexcept -> bool { return iter != nullptr; }
 	);	*/
 
-	for(const auto& iter : roots){
-		if(iter != nullptr){
+	for(const auto& iter : roots) {
+		if(iter != nullptr) {
 			temp.push_back(iter);
 		}
 	}
@@ -384,13 +379,12 @@ Parser::Parser(const std::vector<std::shared_ptr<const Token>>& tokenList_in)
 }
 
 std::vector<std::shared_ptr<Node>> Parser::parseTokens() {
-	
 	std::vector<std::shared_ptr<Node>> branches;
-	
+
 	for(size_t i = 0; i < tokenList.size(); i++) {
 		const bool isLast = i + 1 == tokenList.size();
 		branches.push_back(parseToken(tokenList.at(i), i, isLast));
 	}
-	
+
 	return branches;
 }

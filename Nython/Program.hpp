@@ -77,7 +77,7 @@ struct FunctionReturn {
 std::ostream& operator<<(std::ostream& lhs, const FunctionReturn& rhs);
 
 class StackFrame {
-private:
+	private:
 	std::unordered_map<std::string, VariableType> typeMap;
 	std::unordered_map<std::string, bool> booleans;
 	std::unordered_map<std::string, int> integers;
@@ -85,7 +85,7 @@ private:
 	std::unordered_map<std::string, char> characters;
 	std::unordered_map<std::string, std::string> text;
 
-public:
+	public:
 	VariableType getTypeOf(const std::string& name) const;
 
 	bool boolAtID(const std::string& name) const;
@@ -176,7 +176,7 @@ public:
 std::ostream& operator<<(std::ostream& lhs, const StackFrame& rhs);
 
 class Program {
-private:
+	private:
 	const ActionTree& actions;
 
 	//Holds tree location and whether the function has returned
@@ -184,15 +184,15 @@ private:
 	std::stack<StackFrame> frames;
 
 	inline auto& findTree(const std::string& name, unsigned& loc) const {
-	
 		size_t i = 0;
-		std::for_each(actions.actionList().begin(), actions.actionList().end(), 
-					  [&](const auto& item) -> void { 
-			              if(item->tok->text == name
-			              && item->type == ActionType::DEFINITION) {loc = i;}
-						  i++;
-					  }
-		             );
+		std::for_each(actions.actionList().begin(), actions.actionList().end(),
+					  [&](const auto& item) -> void {
+						if(item->tok->text == name
+			   			&& item->type == ActionType::DEFINITION) {
+							loc = i;
+						}
+						i++;
+		});
 		return actions.actionList().at(loc);
 	}
 	inline auto& currentFrame() { return frames.top(); }
@@ -203,7 +203,7 @@ private:
 	FunctionReturn processVariable(const Action * const var);
 	FunctionReturn processDecision(Action* call);
 
-public:
+	public:
 	Program(const ActionTree& actTree) : actions(actTree) {}
 	FunctionReturn run(const std::string& funcName, StackFrame parameters = StackFrame());
 };

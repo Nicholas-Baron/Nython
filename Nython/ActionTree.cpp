@@ -9,7 +9,6 @@ std::unique_ptr<Action> parseNode(const Node * const n, bool& finished, Definito
 auto parseCall(const Node * const line, bool& finished, DefinitonList& defs);
 
 auto parseCommand(const Node * const line, bool& finished, DefinitonList& defs) {
-	
 	auto current = std::make_unique<Action>(line->token, CALL, VariableType::VOID);
 
 	static unsigned conditionalLvl = 0;
@@ -31,7 +30,7 @@ auto parseCommand(const Node * const line, bool& finished, DefinitonList& defs) 
 		current->children.push_back(parseNode(line->children.front()->children.front().get(), finished, defs));
 		current->children.push_back(parseNode(line->children.at(1)->children.front().get(), finished, defs));
 		current->children.push_back(parseNode(line->children.at(2)->children.front().get(), finished, defs));
-		
+
 		//TODO: convert to std::for_each
 		for(unsigned i = 0; i < line->children.at(3)->children.size(); i++) {
 			current->children.push_back(parseNode(line->children.at(3)->children.at(i).get(), finished, defs));
@@ -52,9 +51,8 @@ auto parseCommand(const Node * const line, bool& finished, DefinitonList& defs) 
 }
 
 auto parseDefinition(const Node * const line, bool& finished, DefinitonList& defs) {
-	
 	auto current = std::make_unique<Action>(line->token, DEFINITION, Keywords::getVarType(*(line->children.front()->token)));
-	
+
 	const bool isFunction = line->children.size() >= 2 || current->resultType == VariableType::VOID;
 	if(isFunction) {
 		for(unsigned i = 1; i < line->children.size(); i++) {
@@ -113,7 +111,6 @@ std::unique_ptr<Action> parseNode(const Node * const n, bool& finished, Definito
 	const auto& lineType = n->token->type;
 
 	switch(lineType) {
-		
 		case TokenType::IDENTIFIER:
 			if(n->children.size() == 0 || n->children.front()->token->type != TokenType::TYPE) {
 				return parseCall(n, finished, defs);
@@ -131,7 +128,6 @@ std::unique_ptr<Action> parseNode(const Node * const n, bool& finished, Definito
 		default:
 			throw std::invalid_argument(n->token->text + " cannot parse this into a Node!");
 	}
-
 }
 
 auto parseActionTree(const std::vector<std::shared_ptr<Node>>& lines, unsigned& pos, DefinitonList& definitions) {

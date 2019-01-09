@@ -19,7 +19,7 @@ struct Node {
 };
 
 class Parser {
-private:
+	private:
 	bool ready = false;
 	std::vector<std::shared_ptr<Node>> roots;
 	std::vector<std::shared_ptr<const Token>> tokenList;
@@ -33,7 +33,7 @@ private:
 	std::vector<std::shared_ptr<Node>> parseTokens();
 	void trimRoots();
 
-public:
+	public:
 	Parser() noexcept {}
 	Parser(const std::vector<std::shared_ptr<const Token>>& tokenList_in);
 

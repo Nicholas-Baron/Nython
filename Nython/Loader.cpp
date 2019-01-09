@@ -6,10 +6,9 @@
 
 //Loads a file line by line
 std::vector<std::string> Loader::fileContents(const std::string& location) {
-	
 	std::vector<std::string> toRet;
 	std::ifstream file(location.c_str());
-	
+
 	if(!file) {
 		toRet.push_back("[ERROR]");
 		return toRet;
@@ -42,7 +41,6 @@ std::vector<std::shared_ptr<const Token>> Loader::tokens(const std::vector<std::
 			auto tokens = splitIntoTokens(spaceDelimsOps(whole_line), " ");
 
 			for(const auto current : tokens) {
-				
 				//If there is no comment, isComment can still be true
 				if(hasComment(current, 0)) {
 					isComment = true;
@@ -61,19 +59,18 @@ std::vector<std::shared_ptr<const Token>> Loader::tokens(const std::vector<std::
 
 //Adds a space before and after operators
 std::string Loader::spaceDelimsOps(const std::string& line) {
-	
 	using std::string;
 	string toRet;
 
 	//TODO: Convert to std::for_each
 	for(unsigned i = 0; i < line.length(); i++) {
 		string poss_str = string(1, line.at(i));
-		
+
 		if(Keywords::isDelineator(poss_str)) {
 			toRet.append(" " + poss_str + " ");
 		} else if(Keywords::isOperator(poss_str)) {
 			toRet.append(" " + poss_str);
-			
+
 			string next_str = string(1, line.at(i + 1));
 			if(Keywords::isOperator(next_str)) {
 				toRet.append(next_str);
