@@ -1,7 +1,10 @@
 #ifndef _PROGRAM
 #define _PROGRAM
 
-#include "ActionTree.h"
+#include "Keywords.hpp"
+#include "ActionTree.hpp"
+
+#include <algorithm>
 #include <unordered_map>
 #include <stack>
 #include <iostream>
@@ -10,23 +13,34 @@ struct FunctionReturn {
 	VariableType type;
 	void* location;
 
+	inline bool hasData() const noexcept { return location != nullptr; }
+
 	//Casting operators
 	operator bool() const {
-		if(type != VariableType::BOOL) {
+		if(!hasData()) {
+			std::cerr << "Dereferencing a nullptr" << std::endl;
+			return false;
+		} else if(type != VariableType::BOOL) {
 			std::cerr << "Converting " << type << " to a bool" << std::endl;
 		}
 		return *static_cast<bool*>(location);
 	}
 
 	operator char() const {
-		if(type != VariableType::CHAR) {
+		if(!hasData()) {
+			std::cerr << "Dereferencing a nullptr" << std::endl;
+			return '\0';
+		} else if(type != VariableType::CHAR) {
 			std::cerr << "Converting " << type << " to a char" << std::endl;
 		}
 		return *static_cast<char*>(location);
 	}
 
 	operator int() const {
-		if(type != VariableType::INT) {
+		if(!hasData()) {
+			std::cerr << "Dereferencing a nullptr" << std::endl;
+			return 0;
+		} else if(type != VariableType::INT) {
 			std::cerr << "Converting " << type << " to an int" << std::endl;
 			if(type == VariableType::FLOAT) {
 				return static_cast<int>(this->operator float());
@@ -36,7 +50,10 @@ struct FunctionReturn {
 	}
 
 	operator float() const {
-		if(type != VariableType::FLOAT) {
+		if(!hasData()) {
+			std::cerr << "Dereferencing a nullptr" << std::endl;
+			return 0;
+		} else if(type != VariableType::FLOAT) {
 			if(type == VariableType::INT) {
 				return static_cast<float>(this->operator int());
 			}
@@ -47,7 +64,10 @@ struct FunctionReturn {
 	}
 
 	operator std::string() const {
-		if(type != VariableType::STRING) {
+		if(!hasData()) {
+			std::cerr << "Dereferencing a nullptr" << std::endl;
+			return "";
+		} else if(type != VariableType::STRING) {
 			std::cerr << "Converting " << type << " to a string" << std::endl;
 		}
 		return *static_cast<std::string*>(location);
@@ -163,20 +183,24 @@ private:
 	std::stack<std::pair<unsigned, bool>> currentExecution;
 	std::stack<StackFrame> frames;
 
-	inline Action* findTree(const std::string& name, unsigned& loc) const {
-		for(unsigned i = 0; i < actions.actionList().size(); i++) {
-			if(actions.actionList()[i]->tok->text == name && actions.actionList()[i]->type == ActionType::DEFINITION) {
-				loc = i;
-			}
-		}
-		return actions.actionList()[loc];
+	inline auto& findTree(const std::string& name, unsigned& loc) const {
+	
+		size_t i = 0;
+		std::for_each(actions.actionList().begin(), actions.actionList().end(), 
+					  [&](const auto& item) -> void { 
+			              if(item->tok->text == name
+			              && item->type == ActionType::DEFINITION) {loc = i;}
+						  i++;
+					  }
+		             );
+		return actions.actionList().at(loc);
 	}
-	inline StackFrame& currentFrame() { return frames.top(); }
+	inline auto& currentFrame() { return frames.top(); }
 
 	FunctionReturn doAction(Action* tree);
 	FunctionReturn processCall(Action* call);
 	FunctionReturn processOperator(Action* call);
-	FunctionReturn processVariable(Action* var);
+	FunctionReturn processVariable(const Action * const var);
 	FunctionReturn processDecision(Action* call);
 
 public:

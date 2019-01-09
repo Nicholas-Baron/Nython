@@ -1,40 +1,35 @@
-#include "Parser.h"
+#include "Parser.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <memory>
 
-Node* createNode(Token* t) {
-	Node* toRet = new Node;
-	toRet->token = t;
-	return toRet;
+inline std::shared_ptr<Node> createNode(const std::shared_ptr<const Token>& t) {
+	return std::make_shared<Node>(t);
 }
 
-#define TOKEN_LIST const std::vector<Token*>& tokenList
+using TOKEN_LIST = const std::vector<std::shared_ptr<const Token>>&;
 
-unsigned nextOfType(TOKEN_LIST, unsigned start, TokenType type, bool walkBackwards = false) {
+unsigned nextOfType(TOKEN_LIST tokenList, unsigned start, TokenType type, bool walkBackwards = false) {
 	unsigned toRet = start;
 	int depth = 0;
-	Token* current = NULL;
 	if(walkBackwards) {
 		toRet--;
-		current = tokenList[toRet];
-		while((current->type != type || depth != 0) && toRet > 0) {
-			if(Keywords::isSecondOfPairDelin(current)) {
+		while((tokenList.at(toRet)->type != type || depth != 0) && toRet > 0) {
+			if(Keywords::isSecondOfPairDelin(*tokenList.at(toRet))) {
 				depth++;
-			} else if(Keywords::isFirstOfPairDelin(current)) { depth--; }
+			} else if(Keywords::isFirstOfPairDelin(*tokenList.at(toRet))) { depth--; }
 
 			toRet--;
-			current = tokenList[toRet];
 		}
 	} else {
 		toRet++;
-		current = tokenList[toRet];
-		while((current->type != type || depth != 0) && toRet < tokenList.size() - 1) {
-			if(Keywords::isSecondOfPairDelin(current)) {
+		while((tokenList.at(toRet)->type != type || depth != 0) && toRet < tokenList.size() - 1) {
+			if(Keywords::isSecondOfPairDelin(*tokenList.at(toRet))) {
 				depth--;
-			} else if(Keywords::isFirstOfPairDelin(current)) { depth++; }
+			} else if(Keywords::isFirstOfPairDelin(*tokenList.at(toRet))) { depth++; }
 
 			toRet++;
-			current = tokenList[toRet];
 		}
 	}
 	return toRet;
@@ -45,16 +40,17 @@ void Parser::readNode(Node* root, int depth) {
 		std::cout << "[" << depth << "]" << *(root->token) << " ";
 
 		if(root->children.size() >= 1) {
-			for(unsigned i = 0; i < root->children.size(); i++) {
-				readNode(root->children[i], depth + 1);
-			}
+			std::for_each(root->children.begin(), root->children.end(), 
+				[depth](auto iter){
+					readNode(iter.get(), depth + 1);
+				});
 		}
 	}
 }
 
 //Finds the closing parenthesis
-Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end, bool walkBackwards = false) {
-	Token* toRet = NULL;
+auto otherEndOfPair(TOKEN_LIST tokenList, unsigned start, unsigned& end, bool walkBackwards = false) {
+	std::shared_ptr<const Token> toRet;
 	end = start;
 	unsigned depth = 0;
 
@@ -65,13 +61,12 @@ Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end, bool walkBackwa
 	}
 
 	while(toRet == NULL) {
-		const auto current = tokenList[end];
-		if(Keywords::isSecondOfPairDelin(current) && depth == 0) {
-			toRet = tokenList[end];
+		if(Keywords::isSecondOfPairDelin(*tokenList.at(end)) && depth == 0) {
+			toRet = tokenList.at(end);
 		} else {
-			if(Keywords::isFirstOfPairDelin(current)) {
+			if(Keywords::isFirstOfPairDelin(*tokenList.at(end))) {
 				depth++;
-			} else if(Keywords::isSecondOfPairDelin(current) && depth != 0) {
+			} else if(Keywords::isSecondOfPairDelin(*tokenList.at(end)) && depth != 0) {
 				depth--;
 			}
 
@@ -87,13 +82,13 @@ Token* otherEndOfPair(TOKEN_LIST, unsigned start, unsigned& end, bool walkBackwa
 }
 
 //Finds the end of a repeat statement
-Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
-	Token* toRet = NULL;
+auto endOfLoop(TOKEN_LIST tokenList, unsigned start, unsigned& end) {
+	std::shared_ptr<const Token> toRet;
 	end = start + 1;
 
 	while(toRet == NULL) {
-		if(Keywords::isEndOfLoop(tokenList[end])) {
-			toRet = tokenList[end];
+		if(Keywords::isEndOfLoop(tokenList.at(end).get())) {
+			toRet = tokenList.at(end);
 		} else { end++; }
 	}
 
@@ -101,13 +96,13 @@ Token* endOfLoop(TOKEN_LIST, unsigned start, unsigned& end) {
 }
 
 //Finds the end of an if statement
-Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
-	Token* toRet = NULL;
+auto endOfIf(TOKEN_LIST tokenList, unsigned start, unsigned& end) {
+	const Token* toRet = nullptr;
 	end = start + 1;
 
-	while(toRet == NULL) {
-		if(Keywords::isEndOfConditional(tokenList[end])) {
-			toRet = tokenList[end];
+	while(toRet == nullptr) {
+		if(Keywords::isEndOfConditional(*tokenList.at(end))) {
+			toRet = tokenList.at(end).get();
 		} else { end++; }
 	}
 
@@ -117,34 +112,37 @@ Token* endOfIf(TOKEN_LIST, unsigned start, unsigned& end) {
 #undef TOKEN_LIST
 
 void Parser::parseOperator(Node* addTo, unsigned& pos) {
-	auto isBin = Keywords::isBinaryOp(tokenList[pos]);
+	const bool isBin = Keywords::isBinaryOp(*tokenList.at(pos));
 	auto leftLoc = nextOfType(tokenList, pos, TokenType::IDENTIFIER, true);
 
-	auto prevNode = !Keywords::isAssignment(addTo->token) && tokenList[pos - 1]->type == TokenType::DELINEATOR
-		? parseToken(tokenList[leftLoc], leftLoc, tokenList[leftLoc + 1], false)
-		: createNode(tokenList[leftLoc]);
+	auto prevNode = !Keywords::isAssignment(addTo->token.get()) && tokenList.at(pos - 1)->type == TokenType::DELINEATOR
+		? parseToken(tokenList.at(leftLoc), leftLoc, false)
+		: createNode(tokenList.at(leftLoc));
 
 	if(isBin) {
 		auto nextOp = nextOfType(tokenList, pos, TokenType::OPERATOR);
 		bool nextOpUsed = false;
 
-		Node* nextNode = nullptr;
+		std::shared_ptr<Node> nextNode;
 		if(nextOfType(tokenList, pos, TokenType::TYPE) > nextOp && nextOfType(tokenList, pos, TokenType::COMMAND) > nextOp
-		   && tokenList[pos + 2]->type == TokenType::OPERATOR) {
-			nextNode = createNode(tokenList[nextOp]);
-			parseOperator(nextNode, nextOp);
+		   && tokenList.at(pos + 2)->type == TokenType::OPERATOR) {
+			nextNode = createNode(tokenList.at(nextOp));
+			parseOperator(nextNode.get(), nextOp);
 			nextOpUsed = true;
 		} else {
-			nextNode = createNode(tokenList[pos + 1]);
+			nextNode = createNode(tokenList.at(pos + 1));
 		}
+		assert(nextNode != nullptr);
+		//nextNode is definitly set here
+
 		//The type name is two spaces behind the current location
-		if(tokenList[pos - 2]->type == TokenType::TYPE && Keywords::isAssignment(addTo->token)) {
-			prevNode->children.push_back(createNode(tokenList[pos - 2]));
+		if(tokenList.at(pos - 2)->type == TokenType::TYPE && Keywords::isAssignment(addTo->token.get())) {
+			prevNode->children.push_back(createNode(tokenList.at(pos - 2)));
 		}
 
-		if(Keywords::isFirstOfPairDelin(tokenList[pos + 2])) {
+		if(Keywords::isFirstOfPairDelin(*tokenList.at(pos + 2))) {
 			pos++;
-			parseIdentifier(nextNode, pos, tokenList[pos + 1]);
+			parseIdentifier(nextNode.get(), pos, tokenList.at(pos + 1).get());
 		}
 
 		addTo->children.push_back(prevNode);
@@ -164,116 +162,131 @@ void Parser::parseOperator(Node* addTo, unsigned& pos) {
 //Used for command and method parameters
 void Parser::parseAfterDelineator(Node* delin, unsigned pos) {
 	unsigned finish = pos + 1;
-	while(tokenList[finish]->type != TokenType::DELINEATOR) {
+	while(tokenList.at(finish)->type != TokenType::DELINEATOR) {
 		finish++;
 	}
 
 	for(unsigned i = pos + 1; i < finish; i++) {
-		auto t = tokenList[i];
-		auto next = tokenList[i + 1];
+		auto t = tokenList.at(i), next = tokenList.at(i + 1);
 
 		if(t->type == TokenType::OPERATOR) {
-			Node* op = createNode(t);
-			parseOperator(op, i);
+			auto op = createNode(t);
+			parseOperator(op.get(), i);
 			delin->children.push_back(op);
 		} else if(next->type == TokenType::OPERATOR) {
 			i++;
-			Node* op = createNode(next);
-			parseOperator(op, i);
+			auto op = createNode(next);
+			parseOperator(op.get(), i);
 			delin->children.push_back(op);
 		} else if(t->type == TokenType::IDENTIFIER) {
-			Node* id = createNode(t);
-			parseIdentifier(id, i, tokenList[i + 1]);
+			auto id = createNode(t);
+			parseIdentifier(id.get(), i, tokenList.at(i + 1).get());
 			delin->children.push_back(id);
 		} else if(t->type == TokenType::LITERAL) {
-			Node* id = createNode(t);
+			auto id = createNode(t);
 			delin->children.push_back(id);
 		}
 	}
 }
 
-void Parser::parseCommand(Node* comm, unsigned& pos, Token* next) {
-	if(next != nullptr && next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
-		auto endOfPairPos = pos + 2;
+void Parser::parseCommand(Node* comm, unsigned& pos, bool isLast) {
+	
+	if(!isLast && tokenList.at(pos + 1) != nullptr 
+	&& tokenList.at(pos + 1)->type == TokenType::DELINEATOR 
+	&& Keywords::isFirstOfPairDelin(*tokenList.at(pos + 1))) {
+		unsigned endOfPairPos = pos + 2;
 		auto otherEnd = otherEndOfPair(tokenList, pos + 1, endOfPairPos);
 
 		int depth = 0;
 		for(unsigned j = pos + 1; j < endOfPairPos; j++) {
-			const auto current = tokenList[j];
+			const auto current = tokenList.at(j);
 
-			if((current->type == TokenType::DELINEATOR && depth == 0) || Keywords::nonPairedDelin(current)) {
+			if((current->type == TokenType::DELINEATOR && depth == 0) || Keywords::nonPairedDelin(*current)) {
 				const auto delin = createNode(current);
-				parseAfterDelineator(delin, j);
+				parseAfterDelineator(delin.get(), j);
 				comm->children.push_back(delin);
 			}
 
-			if(Keywords::isFirstOfPairDelin(current)) {
+			if(Keywords::isFirstOfPairDelin(*current)) {
 				depth++;
-			} else if(Keywords::isSecondOfPairDelin(current)) {
+			} else if(Keywords::isSecondOfPairDelin(*current)) {
 				depth--;
 			}
 		}
 
-		Node* delinEnd = createNode(otherEnd);
+		auto delinEnd = createNode(otherEnd);
 		comm->children.push_back(delinEnd);
 
 		pos = endOfPairPos;
 
-		if(Keywords::isLoopStart(comm->token)) {
+		if(Keywords::isLoopStart(comm->token.get())) {
 			unsigned endLoopPos = pos;
-			Token* endLoop = endOfLoop(tokenList, pos, endLoopPos);
+			auto endLoop = endOfLoop(tokenList, pos, endLoopPos);
 			pos++;
-			parseSequence(delinEnd, pos, endLoopPos, true);
+			parseSequence(delinEnd.get(), pos, endLoopPos, true);
 
-			Node* loopEnd = createNode(endLoop);
+			auto loopEnd = createNode(endLoop);
 			delinEnd->children.push_back(loopEnd);
 
 			pos = endLoopPos;
-		} else if(Keywords::isConditionalStart(comm->token)) {
+		} else if(Keywords::isConditionalStart(comm->token.get())) {
 			unsigned endIfPos = pos;
 			endOfIf(tokenList, pos, endIfPos);
 			pos++;
-			parseSequence(delinEnd, pos, endIfPos, true);
+			parseSequence(delinEnd.get(), pos, endIfPos, true);
 
 			pos = endIfPos - 1;
 		}
 	} else {
-		if(Keywords::needsParameter(comm->token)) {
+		
+		if(Keywords::needsParameter(comm->token.get())) {
+			
+			auto& next = tokenList.at(pos + 1);
+			assert(next != nullptr);
 			pos++;
-			Node* param = parseToken(next, pos, tokenList[pos + 1], pos + 1 == tokenList.size());
+			
+			auto local_next = std::make_shared<const Token>(*next);
+			auto param = parseToken(local_next, pos, pos + 1 == tokenList.size());
 			comm->children.push_back(param);
-		} else if(Keywords::isFuncEnd(comm->token)) {
-			if(next == nullptr) {
-				//A blank return (ends a void function)
-				return;
-			} else if(next->type == TokenType::LITERAL) {
-				Node* param = createNode(next);
-				comm->children.push_back(param);
-				pos++;
-			} else if(next->type == TokenType::IDENTIFIER) {
-				pos++;
-				auto nextCmd = nextOfType(tokenList, pos, TokenType::COMMAND);
-				auto nextType = nextOfType(tokenList, pos, TokenType::TYPE);
+		} else if(Keywords::isFuncEnd(comm->token.get())) {
+			
+			try{
+				auto& next = tokenList.at(pos + 1);
+			
+				if(isLast || next == nullptr) {
+					//A blank return (ends a void function)
+					return;
+				} else if(next->type == TokenType::LITERAL) {
+					auto param = createNode(next);
+					comm->children.push_back(param);
+					pos++;
+				} else if(next->type == TokenType::IDENTIFIER) {
+					pos++;
+					const auto nextCmd = nextOfType(tokenList, pos, TokenType::COMMAND);
+					const auto nextType = nextOfType(tokenList, pos, TokenType::TYPE);
 
-				unsigned stop = std::min(nextCmd, nextType);
-				parseSequence(comm, pos, stop, false);
-				pos = stop;
+					const unsigned stop = std::min(nextCmd, nextType);
+					parseSequence(comm, pos, stop, false);
+					pos = stop;
+				}
+			}catch(...){
+				return;
 			}
 		}
 	}
 }
 
 //Reads a sequence of tokens for loops, if-statements, or long returns
-void Parser::parseSequence(Node* addTo, unsigned& start, unsigned end, bool multiLine) {
+void Parser::parseSequence(Node* addTo, unsigned start, unsigned end, bool multiLine) {
 	auto nextOp = nextOfType(tokenList, start, TokenType::OPERATOR);
 
 	if(nextOp < end && !multiLine) {
 		nextOp--; //Moves it one back
-		auto op = parseToken(tokenList[nextOp], nextOp, tokenList[nextOp + 1], nextOp + 1 == end);
+		auto op = parseToken(tokenList.at(nextOp), nextOp, nextOp + 1 == end);
 		addTo->children.push_back(op);
 	} else {
 		for(unsigned i = start; i < end; i++) {
-			auto parsed = parseToken(tokenList[i], i, tokenList[i + 1], i + 1 == end);
+			auto parsed = parseToken(tokenList.at(i), i, i + 1 == end);
 			if(parsed != nullptr) {
 				addTo->children.push_back(parsed);
 			}
@@ -282,23 +295,28 @@ void Parser::parseSequence(Node* addTo, unsigned& start, unsigned end, bool mult
 }
 
 //Identifier is either a variable name or method name
-void Parser::parseIdentifier(Node* id, unsigned& pos, Token* next) {
-	auto prev = tokenList[pos - 1];
+void Parser::parseIdentifier(Node* id, unsigned& pos, const Token* next) {
+	
+	assert(next != nullptr);
+	assert(id != nullptr);
+
+	auto& prev = tokenList.at(pos - 1);
 
 	if(prev->type == TokenType::TYPE) {
-		auto prevNode = createNode(prev);
-		id->children.push_back(prevNode);
+		id->children.push_back(createNode(prev));
 	}
 
-	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(next)) {
+	if(next->type == TokenType::DELINEATOR && Keywords::isFirstOfPairDelin(*next)) {
+		//This is a function call
+		
 		unsigned endOfPair = pos + 2;
 		pos++;
 		otherEndOfPair(tokenList, pos, endOfPair);
 
 		auto nextDelin = nextOfType(tokenList, pos, TokenType::DELINEATOR);
 		while(nextDelin <= endOfPair) {
-			Node* delin = createNode(tokenList[pos]);
-			parseAfterDelineator(delin, pos);
+			std::shared_ptr<Node> delin = createNode(tokenList.at(pos));
+			parseAfterDelineator(delin.get(), pos);
 			id->children.push_back(delin);
 			pos = nextDelin;
 			nextDelin = nextOfType(tokenList, pos, TokenType::DELINEATOR);
@@ -309,56 +327,70 @@ void Parser::parseIdentifier(Node* id, unsigned& pos, Token* next) {
 }
 
 //Parses a single token
-Node* Parser::parseToken(Token* t, unsigned& pos, Token* next, bool isLast) {
-	Node* toRet = NULL;
+std::shared_ptr<Node> Parser::parseToken(const std::shared_ptr<const Token>& t, unsigned& pos, bool isLast) {
+	if(t == nullptr) { return nullptr; }
 
-	if(t->type == TokenType::COMMAND) {
-		toRet = createNode(t);
-		parseCommand(toRet, pos, next);
-	} else if(!isLast && next->type == TokenType::OPERATOR) {
-		toRet = createNode(next);
+	assert(*tokenList.at(pos) == *t);
+
+	std::shared_ptr<Node> toRet;
+	
+	if(!isLast && tokenList.at(pos + 1)->type == TokenType::OPERATOR) {
+		toRet = createNode(tokenList.at(pos + 1));
 		pos++;
-		parseOperator(toRet, pos);
-	} else if(t->type == TokenType::IDENTIFIER) {
-		toRet = createNode(t);
-		parseIdentifier(toRet, pos, next);
-	} else if(t->type == TokenType::LITERAL) {
-		toRet = createNode(t);
+		parseOperator(toRet.get(), pos);
+		return toRet;
+	}
+	
+	switch(t->type) {
+		case TokenType::LITERAL:
+			return createNode(t);
+		case TokenType::IDENTIFIER:
+			toRet = createNode(t);
+			parseIdentifier(toRet.get(), pos, tokenList.at(pos + 1).get());
+			return toRet;
+		case TokenType::COMMAND:
+			toRet = createNode(t);
+			parseCommand(toRet.get(), pos, isLast);
+			return toRet;	   
+		default:
+			break;
 	}
 
-	return toRet;
+	return nullptr;
 }
 
 void Parser::trimRoots() {
-	std::vector<Node*> temp;
-	for(unsigned i = 0; i < roots.size(); i++) {
-		auto t = roots[i];
-		if(t) {
-			temp.push_back(t);
+	std::vector<std::shared_ptr<Node>> temp;
+	
+	/*std::copy_if(roots.begin(), roots.end(), temp.begin(), 
+				  [ ](const std::shared_ptr<Node>& iter) noexcept -> bool { return iter != nullptr; }
+	);	*/
+
+	for(const auto& iter : roots){
+		if(iter != nullptr){
+			temp.push_back(iter);
 		}
 	}
+
 	roots = temp;
 }
 
-Parser::Parser(const std::vector<Token*>& tokenList) :tokenList(tokenList) {
+Parser::Parser(const std::vector<std::shared_ptr<const Token>>& tokenList_in)
+	: tokenList(tokenList_in) {
 	roots = parseTokens();
 	trimRoots();
 	roots.shrink_to_fit();
 	ready = true;
 }
 
-std::vector<Node*> Parser::parseTokens() {
-	std::vector<Node*> branches;
-	for(unsigned i = 0; i < tokenList.size(); i++) {
-		auto t = tokenList[i];
-
-		bool isLast = i + 1 == tokenList.size();
-		Token* next = NULL;
-		if(!isLast) {
-			next = tokenList[i + 1];
-		}
-
-		branches.push_back(parseToken(t, i, next, isLast));
+std::vector<std::shared_ptr<Node>> Parser::parseTokens() {
+	
+	std::vector<std::shared_ptr<Node>> branches;
+	
+	for(size_t i = 0; i < tokenList.size(); i++) {
+		const bool isLast = i + 1 == tokenList.size();
+		branches.push_back(parseToken(tokenList.at(i), i, isLast));
 	}
+	
 	return branches;
 }

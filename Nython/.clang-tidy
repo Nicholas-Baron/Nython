@@ -1,0 +1,7 @@
+Checks:          'clang-analyzer-(core|dead|null)*,cppcore*,(bugprone|misc|modernize|perf|read)*'
+WarningsAsErrors: '(bugprone|misc|modernize|perf|read)*'
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: false
+FormatStyle:     none
+User:            nick
+

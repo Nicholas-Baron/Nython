@@ -35,22 +35,22 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Loader.h">
+    <ClInclude Include="ActionTree.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Keywords.h">
+    <ClInclude Include="Keywords.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Parser.h">
+    <ClInclude Include="Loader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VectorUtil.h">
+    <ClInclude Include="Parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ActionTree.h">
+    <ClInclude Include="Program.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Program.h">
+    <ClInclude Include="VectorUtil.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,6 @@
-#include "Program.h"
+#include "Program.hpp"
+
+#include <cassert>
 
 VariableType StackFrame::getTypeOf(const std::string & name) const {
 	if(typeMap.find(name) == typeMap.end()) {
@@ -8,7 +10,7 @@ VariableType StackFrame::getTypeOf(const std::string & name) const {
 }
 
 bool StackFrame::boolAtID(const std::string & name) const {
-	auto info = getTypeOf(name);
+	const auto info = getTypeOf(name);
 	if(info == VariableType::BOOL) {
 		return booleans.at(name);
 	}
@@ -17,7 +19,7 @@ bool StackFrame::boolAtID(const std::string & name) const {
 }
 
 int StackFrame::intAtID(const std::string & name) const {
-	auto info = getTypeOf(name);
+	const auto info = getTypeOf(name);
 	if(info == VariableType::INT) {
 		return integers.at(name);
 	}
@@ -26,7 +28,7 @@ int StackFrame::intAtID(const std::string & name) const {
 }
 
 char StackFrame::charAtID(const std::string & name) const {
-	auto info = getTypeOf(name);
+	const auto info = getTypeOf(name);
 	if(info == VariableType::CHAR) {
 		return characters.at(name);
 	}
@@ -35,7 +37,7 @@ char StackFrame::charAtID(const std::string & name) const {
 }
 
 float StackFrame::floatAtID(const std::string & name) const {
-	auto info = getTypeOf(name);
+	const auto info = getTypeOf(name);
 	if(info == VariableType::FLOAT) {
 		return floats.at(name);
 	}
@@ -44,12 +46,12 @@ float StackFrame::floatAtID(const std::string & name) const {
 }
 
 std::string StackFrame::stringAtID(const std::string & name) const {
-	auto info = getTypeOf(name);
+	const auto info = getTypeOf(name);
 	if(info == VariableType::STRING) {
 		return text.at(name);
 	}
 	std::cerr << name << " is not a string." << std::endl;
-	return 0;
+	return nullptr;
 }
 //End StackFrame Implementation
 
@@ -57,30 +59,29 @@ FunctionReturn Program::processCall(Action* call) {
 	const auto& funcName = call->tok->text;
 	call->children.shrink_to_fit();
 
+	//TODO: Assert to protect front()
 	if(Keywords::isCommand(funcName)) {
 		if(funcName == "endline") {
 			std::cout << std::endl;
 		} else if(funcName == "print") {
-			std::cout << doAction(call->children[0]);
-		} else if(Keywords::isFuncEnd(call->tok)) {
-			//std::cout << "[DEBUG] Returning from a function." << std::endl;
-
+			std::cout << doAction(call->children.front().get());
+		} else if(Keywords::isFuncEnd(call->tok.get())) {
 			currentExecution.top().second = true;
 			if(call->hasChildren()) {
-				return doAction(call->children[0]);
+				return doAction(call->children.front().get());
 			} else {
 				return FunctionReturn{call->resultType};
 			}
-		} else if(Keywords::isLoopStart(call->tok)) {
-			doAction(call->children[0]);
-			auto repeat = static_cast<bool>(doAction(call->children[1]));
+		} else if(Keywords::isLoopStart(call->tok.get())) {
+			doAction(call->children.front().get());
+			auto repeat = static_cast<bool>(doAction(call->children.at(1).get()));
 
 			while(repeat) {
 				for(size_t i = 3; i < call->children.size(); i++) {
-					doAction(call->children[i]);
+					doAction(call->children.at(i).get());
 				}
-				doAction(call->children[2]);
-				repeat = static_cast<bool>(doAction(call->children[1]));
+				doAction(call->children.at(2).get());
+				repeat = static_cast<bool>(doAction(call->children.at(1).get()));
 			}
 		}
 
@@ -94,14 +95,12 @@ FunctionReturn Program::processCall(Action* call) {
 	//Ensure correctness of parameters
 	unsigned numParameters = 0;
 	for(size_t i = 0; i < definition->children.size(); i++) {
-		if(definition->children[i]->type == ActionType::DEFINITION) {
+		if(definition->children.at(i)->type == ActionType::DEFINITION) {
 			numParameters++;
 		} else {
 			break;
 		}
 	}
-
-	//std::cout << "[TEMP] Function " << funcName << " has " << numParameters << " parameters." << std::endl;
 
 	if(numParameters != call->children.size()) {
 		std::cerr << "[ERR] Function " << funcName << " called with " << call->children.size() << " parameters, instead of " << numParameters << std::endl;
@@ -115,13 +114,13 @@ FunctionReturn Program::processCall(Action* call) {
 
 	StackFrame params;
 	for(size_t i = 0; i < numParameters; i++) {
-		auto defSide = definition->children[i];
-		auto callSide = call->children[i];
+		auto& defSide = definition->children.at(i);
+		auto& callSide = call->children.at(i);
 
 		if(!Keywords::compatibleVarTypes(callSide->resultType, defSide->resultType)) {
 			std::cerr << "Wrong parameter type for " << defSide->tok->text << ": " << callSide->resultType << std::endl;
 		} else if(callSide->type == OPCALL || callSide->type == CALL || callSide->type == LITVAL) {
-			params.setVariable(defSide, doAction(callSide));
+			params.setVariable(defSide.get(), doAction(callSide.get()));
 		} else {
 			std::cerr << "Variable not set: " << defSide->tok->text << std::endl;
 		}
@@ -130,13 +129,13 @@ FunctionReturn Program::processCall(Action* call) {
 	return run(funcName, params);
 }
 
-FunctionReturn processLiteral(Action* value) {
+FunctionReturn processLiteral(const Action * const value) {
 	FunctionReturn toRet{value->resultType};
 
 	const auto& text = value->tok->text;
 	switch(value->resultType) {
 		case VariableType::BOOL:
-			toRet.location = new bool{Keywords::getBoolFromToken(value->tok)};
+			toRet.location = new bool{Keywords::getBoolFromToken(*(value->tok))};
 			break;
 		case VariableType::INT:
 			toRet.location = new int{std::stoi(text)};
@@ -154,34 +153,37 @@ FunctionReturn processLiteral(Action* value) {
 }
 
 FunctionReturn Program::processOperator(Action* call) {
-	FunctionReturn toRet;
+	FunctionReturn toRet{};
 	if(call->children.size() == 2) {
-		const auto left = call->children[0], right = call->children[1];
+		const std::unique_ptr<Action>& left = call->children.front();
+		const std::unique_ptr<Action>& right = call->children.back();
 
 		//Assignment
-		if(Keywords::isAssignment(call->tok)) {
+		if(Keywords::isAssignment(call->tok.get())) {
 			toRet.type = VariableType::VOID;
 			bool success = false;
-			if(!Keywords::isAssignAfterOp(call->tok)) {
-				success = currentFrame().setVariable(left, doAction(right));
+			if(!Keywords::isAssignAfterOp(call->tok.get())) {
+				success = currentFrame().setVariable(left.get(), doAction(right.get()));
 			} else {
 				//Format op as just the non-assignment op
-				const char op[] = {call->tok->text[0], '\0'};
-				const auto resLeft = doAction(left);
-				const auto resRight = doAction(right);
+				const std::string op = {call->tok->text.front(), '\0'};
+				const auto resLeft = doAction(left.get());
+				const auto resRight = doAction(right.get());
 
 				//Is math operation
 				switch(left->resultType) {
-					case VariableType::INT: {
-						int tempI = Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight));
-						success = currentFrame().setVariable(left, FunctionReturn{VariableType::INT, new int{tempI}});
+					case VariableType::INT:
+					{
+						auto tempI = Keywords::opMath(op, static_cast<int>(resLeft), static_cast<int>(resRight));
+						success = currentFrame().setVariable(left.get(), FunctionReturn{VariableType::INT, new int{tempI}});
 					}
-											break;
-					case VariableType::FLOAT: {
-						float tempF = Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight));
-						success = currentFrame().setVariable(left, FunctionReturn{VariableType::FLOAT, new float{tempF}});
+					break;
+					case VariableType::FLOAT:
+					{
+						auto tempF = Keywords::opMath(op, static_cast<float>(resLeft), static_cast<float>(resRight));
+						success = currentFrame().setVariable(left.get(), FunctionReturn{VariableType::FLOAT, new float{tempF}});
 					}
-											  break;
+					break;
 					default:
 						std::cerr << "Unsupported math operation!" << std::endl;
 						break;
@@ -193,23 +195,23 @@ FunctionReturn Program::processOperator(Action* call) {
 			}
 
 		//Binary
-		} else if(Keywords::isBinaryOp(call->tok)) {
-			const auto resLeft = doAction(left);
-			const auto resRight = doAction(right);
+		} else if(Keywords::isBinaryOp(*(call->tok))) {
+			const auto resLeft = doAction(left.get());
+			const auto resRight = doAction(right.get());
 			const auto& op = call->tok->text;
 
 			//True/False
-			if(Keywords::isBoolOp(call->tok)) {
+			if(Keywords::isBoolOp(call->tok.get())) {
 				toRet.type = VariableType::BOOL;
 
 				if(resLeft.type == VariableType::INT) {
-					auto left = static_cast<int>(resLeft);
+					const int left_val = static_cast<int>(resLeft);
 					switch(resRight.type) {
 						case VariableType::INT:
-							toRet.location = new bool(Keywords::opTest(op, left, static_cast<int>(resRight)));
+							toRet.location = new bool(Keywords::opTest(op, left_val, static_cast<int>(resRight)));
 							break;
 						case VariableType::FLOAT:
-							toRet.location = new bool(Keywords::opTest(op, left, static_cast<float>(resRight)));
+							toRet.location = new bool(Keywords::opTest(op, left_val, static_cast<float>(resRight)));
 							break;
 						default:
 							std::cerr << "[ERR] Unsupported comparison!" << std::endl;
@@ -239,12 +241,12 @@ FunctionReturn Program::processOperator(Action* call) {
 				}
 			}
 		}
-	} else if(Keywords::isUnaryOp(call->tok) && call->children.size() == 1) {
-		auto var = call->children[0];
-		const auto& varName = call->children[0]->tok->text;
+	} else if(Keywords::isUnaryOp(call->tok.get()) && call->children.size() == 1) {
+		auto& var = call->children.front();
+		const auto& varName = call->children.front()->tok->text;
 
-		if(var->resultType == VariableType::BOOL && Keywords::isBoolOp(call->tok)) {
-			auto val = static_cast<bool>(doAction(var));
+		if(var->resultType == VariableType::BOOL && Keywords::isBoolOp(call->tok.get())) {
+			auto val = static_cast<bool>(doAction(var.get()));
 			Keywords::opUnary(call->tok->text, val);
 			toRet.type = VariableType::BOOL;
 			toRet.location = new bool(val);
@@ -268,7 +270,7 @@ FunctionReturn Program::processOperator(Action* call) {
 	return toRet;
 }
 
-FunctionReturn Program::processVariable(Action * var) {
+FunctionReturn Program::processVariable(const Action * const var) {
 	FunctionReturn toRet{var->resultType};
 
 	switch(toRet.type) {
@@ -287,22 +289,30 @@ FunctionReturn Program::processVariable(Action * var) {
 }
 
 FunctionReturn Program::processDecision(Action * call) {
-	if(!Keywords::isConditionalStart(call->tok) && Keywords::isEndOfConditional(call->tok)) {
-		return doAction(call->children[0]);
+	if(call == nullptr) {
+		std::cerr << "A null action was given for a decision! Returning false"
+			<< std::endl;
+		return FunctionReturn{VariableType::BOOL, new bool(false)};
 	}
 
-	auto result = static_cast<bool>(doAction(call->children[0]));
+	if(!Keywords::isConditionalStart(call->tok.get()) && Keywords::isEndOfConditional(*(call->tok))) {
+		return doAction(call->children.front().get());
+	}
 
-	if(result && Keywords::isConditionalStart(call->tok) && !Keywords::isEndOfConditional(call->tok)) {
-		return doAction(call->children[1]);
-	} else if(result && Keywords::isConditionalStart(call->tok) && Keywords::isEndOfConditional(call->tok)) {
-		return doAction(call->children[1]);
+	const bool result = static_cast<bool>(doAction(call->children.at(0).get()));
+
+	if(result && Keywords::isConditionalStart(call->tok.get()) && !Keywords::isEndOfConditional(*(call->tok))) {
+		return doAction(call->children.at(1).get());
+	} else if(result && Keywords::isConditionalStart(call->tok.get()) && Keywords::isEndOfConditional(*(call->tok))) {
+		return doAction(call->children.at(1).get());
 	}
 
 	return FunctionReturn{VariableType::BOOL, new bool(false)};
 }
 
 FunctionReturn Program::doAction(Action* tree) {
+	
+	assert(tree != nullptr);
 	if(!tree->hasChildren()) {
 		switch(tree->type) {
 			case ActionType::CALL:
@@ -328,7 +338,7 @@ FunctionReturn Program::doAction(Action* tree) {
 			FunctionReturn toRet;
 			for(auto& child : tree->children) {
 				if(child->type != ActionType::DEFINITION && !currentExecution.top().second) {
-					toRet = doAction(child);
+					toRet = doAction(child.get());
 				}
 			}
 			return toRet;
@@ -346,12 +356,12 @@ FunctionReturn Program::doAction(Action* tree) {
 
 FunctionReturn Program::run(const std::string & funcName, StackFrame params) {
 	unsigned startLoc = 0;
-	auto func = findTree(funcName, startLoc);
+	auto& func = findTree(funcName, startLoc);
 
 	currentExecution.push(std::make_pair(startLoc, false));
 	frames.push(params);
 
-	auto result = doAction(func);
+	auto result = doAction(func.get());
 	currentExecution.pop();
 	frames.pop();
 

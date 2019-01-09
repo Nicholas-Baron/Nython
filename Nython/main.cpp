@@ -1,7 +1,7 @@
-#include "Loader.h"
-#include "Parser.h"
-#include "ActionTree.h"
-#include "Program.h"
+#include "Loader.hpp"
+#include "Parser.hpp"
+#include "ActionTree.hpp"
+#include "Program.hpp"
 
 #include <iostream>
 #include <string>
@@ -152,7 +152,7 @@ void showParseTrees() {
 
 	std::cout << "Parse Trees for " << programName << std::endl;
 	for(unsigned i = 0; i < parseTree.parsedTokens().size(); i++) {
-		Parser::readNode(parseTree.parsedTokens()[i]);
+		Parser::readNode(parseTree.parsedTokens()[i].get());
 		std::cout << " Line #" << i << std::endl;
 	}
 	std::cout << std::endl;
@@ -166,7 +166,7 @@ void showActionTrees() {
 	std::cout << "Action Trees for " << programName << std::endl;
 	for(unsigned i = 0; i < actions.actionList().size(); i++) {
 		std::cout << "Action Set #" << i << std::endl;
-		actions.printActionTree(actions.actionList()[i]);
+		actions.printActionTree(actions.actionList().at(i));
 	}
 	std::cout << std::endl;
 }
@@ -217,13 +217,13 @@ int main() {
 		std::cout << "2. Load Program" << std::endl;
 		std::cout << "3. Run Program" << std::endl;
 		std::cout << "9. Enable Special Tools" << std::endl;
-		
+
 		if(devOptions) {
 			std::cout << "11. Show Token List" << std::endl;
 			std::cout << "12. Show Parser Output" << std::endl;
 			std::cout << "13. Show Action Trees" << std::endl;
-		} 
-		
+		}
+
 		std::cout << "Select an option: ";
 		std::cin >> option;
 		std::cout << std::endl;
@@ -242,7 +242,7 @@ int main() {
 					unsigned code;
 					std::cout << "Enter the special unlock code: ";
 					std::cin >> code;
-					devOptions = (code == 1999042)?!devOptions:false;
+					devOptions = (code == 1999042) ? !devOptions : false;
 					break;
 				default:
 					std::cout << "Invalid option" << std::endl;

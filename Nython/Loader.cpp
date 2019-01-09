@@ -1,11 +1,15 @@
-#include "Loader.h"
+#include "Loader.hpp"
 
 #include <iostream>
 #include <sstream>
+#include <memory>
 
+//Loads a file line by line
 std::vector<std::string> Loader::fileContents(const std::string& location) {
+	
 	std::vector<std::string> toRet;
 	std::ifstream file(location.c_str());
+	
 	if(!file) {
 		toRet.push_back("[ERROR]");
 		return toRet;
@@ -23,33 +27,30 @@ std::vector<std::string> Loader::fileContents(const std::string& location) {
 }
 
 //Breaks the string into its tokens
-std::vector<Token*> Loader::tokens(const std::vector<std::string>& program) {
-	std::vector<Token*> toRet;
+std::vector<std::shared_ptr<const Token>> Loader::tokens(const std::vector<std::string>& program) {
+	std::vector<std::shared_ptr<const Token>> toRet;
 
 	for(unsigned line = 0; line < program.size(); line++) {
 		bool isComment = false;
-		auto whole_line = trim(program[line]);
-		unsigned commentLoc = 0;
+		auto whole_line = trim(program.at(line));
 
-		if(hasComment(whole_line, commentLoc)) {
-			std::cout << "Comment found on line #" << line << ", character " << commentLoc << std::endl;
+		if(hasComment(whole_line, 0)) {
+			std::cout << "Comment found on line #" << line << std::endl;
 		}
 
 		if(!whole_line.empty() && !isComment) {
 			auto tokens = splitIntoTokens(spaceDelimsOps(whole_line), " ");
 
 			for(const auto current : tokens) {
-				unsigned possibleComment = 0;
-				if(hasComment(current, possibleComment)) {
-					if(possibleComment == 0) {
-						isComment = true;
-					}
+				
+				//If there is no comment, isComment can still be true
+				if(hasComment(current, 0)) {
+					isComment = true;
 				}
 
 				if(!isComment) {
-					TokenType tt = Keywords::getTokenType(current);
-					Token* tok = new Token{tt, current, line};
-					toRet.push_back(tok);
+					auto tt = Keywords::getTokenType(current);
+					toRet.push_back(std::make_unique<Token>(tt, current, line));
 				}
 			}
 		}
@@ -60,16 +61,20 @@ std::vector<Token*> Loader::tokens(const std::vector<std::string>& program) {
 
 //Adds a space before and after operators
 std::string Loader::spaceDelimsOps(const std::string& line) {
-	std::string toRet;
+	
+	using std::string;
+	string toRet;
 
+	//TODO: Convert to std::for_each
 	for(unsigned i = 0; i < line.length(); i++) {
-		std::string poss_str = std::string(1, line[i]);
-		std::string next_str = std::string(1, line[i + 1]);
-
+		string poss_str = string(1, line.at(i));
+		
 		if(Keywords::isDelineator(poss_str)) {
 			toRet.append(" " + poss_str + " ");
 		} else if(Keywords::isOperator(poss_str)) {
 			toRet.append(" " + poss_str);
+			
+			string next_str = string(1, line.at(i + 1));
 			if(Keywords::isOperator(next_str)) {
 				toRet.append(next_str);
 				i++;
@@ -93,7 +98,7 @@ std::vector<std::string> Loader::splitIntoTokens(const std::string& str, const s
 		pos = str.find(delim, prev);
 		if(pos == std::string::npos) pos = str.length();
 
-		auto nextString = str.find('\"', prev);
+		const size_t nextString = str.find('\"', prev);
 		if(nextString < pos) {
 			prev = nextString + 1;
 			pos = str.find('\"', pos);

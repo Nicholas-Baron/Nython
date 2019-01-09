@@ -7,7 +7,7 @@
 template<class T>
 std::ostream& operator<<(std::ostream& lhs, std::vector<T> list) {
 	for(unsigned i = 0; i < list.size(); i++) {
-		lhs << list[i];
+		lhs << list.at(i);
 		if(i != list.size() - 1) {
 			lhs << ", ";
 		}
@@ -20,7 +20,7 @@ namespace VectorUtil {
 	int position(const std::vector<T>& list, T find) {
 		int pos = -1;
 		for(unsigned i = 0; i < list.size(); i++) {
-			if(list[i] == find) {
+			if(list.at(i) == find) {
 				pos = i;
 			}
 		}
